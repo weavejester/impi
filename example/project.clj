@@ -12,7 +12,7 @@
   {:builds
    {:main
     {:figwheel     true
-     :source-paths ["src"]
+     :source-paths ["src" "../src"]
      :compiler     {:main example.core
                     :asset-path "js/out"
                     :output-to "resources/public/js/main.js"

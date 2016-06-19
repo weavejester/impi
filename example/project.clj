@@ -6,4 +6,19 @@
   :dependencies [[org.clojure/clojure "1.7.0"]
                  [org.clojure/clojurescript "1.7.228"]
                  [impi "0.1.0-SNAPSHOT"]]
-  :plugins [[lein-cljsbuild "1.1.3"]])
+  :plugins [[lein-cljsbuild "1.1.3"]
+            [lein-figwheel "0.5.4-3"]]
+  :cljsbuild
+  {:builds
+   {:main
+    {:figwheel     true
+     :source-paths ["src"]
+     :compiler     {:main example.core
+                    :asset-path "js/out"
+                    :output-to "resources/public/js/main.js"
+                    :output-dir "resources/public/js/out"
+                    :optimizations :none}}}}
+  :figwheel
+  {:http-server-root "public"
+   :server-port      3000
+   :css-dirs         ["resources/public/css"]})

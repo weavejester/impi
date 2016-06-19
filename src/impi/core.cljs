@@ -5,6 +5,7 @@
   (js/PIXI.autoDetectRenderer w h))
 
 (defn mount [renderer element]
+  (set! (.-innerHTML element) "")
   (.appendChild element (.-view renderer)))
 
 (defn build [scene]

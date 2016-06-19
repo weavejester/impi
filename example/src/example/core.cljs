@@ -1,3 +1,5 @@
-(ns example.core)
+(ns example.core
+  (:require [impi.core :as impi]))
 
-(js/console.debug "foo")
+(let [renderer (impi/renderer [400 300])]
+  (impi/mount renderer (.getElementById js/document "app")))

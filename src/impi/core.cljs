@@ -1,6 +1,8 @@
-(ns impi.core)
+(ns impi.core
+  (:require cljsjs.pixi))
 
-(defn foo
-  "I don't do a whole lot."
-  [x]
-  (println x "Hello, World!"))
+(defn renderer [[w h]]
+  (js/PIXI.autoDetectRenderer w h))
+
+(defn mount [renderer element]
+  (.appendChild element (.-view renderer)))

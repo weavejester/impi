@@ -5,9 +5,14 @@
 (defn renderer [[w h]]
   (js/PIXI.autoDetectRenderer w h))
 
+(defn mounted? [renderer element]
+  (and (identical? (.-firstChild element) (.-view renderer))
+       (= (-> element .-childNodes .-length) 1)))
+
 (defn mount [renderer element]
-  (set! (.-innerHTML element) "")
-  (.appendChild element (.-view renderer)))
+  (when-not (mounted? renderer element)
+    (set! (.-innerHTML element) "")
+    (.appendChild element (.-view renderer))))
 
 (def ^:private loader
   (js/PIXI.loaders.Loader.))

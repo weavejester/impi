@@ -1,5 +1,5 @@
 (ns impi.core
-  (:refer-clojure :exclude [load])
+  (:refer-clojure :exclude [load update])
   (:require cljsjs.pixi))
 
 (defn renderer [[w h]]
@@ -19,15 +19,34 @@
 (defn get-texture [asset]
   (.-texture (aget (.-resources loader) asset)))
 
-(defn build [scene]
-  (let [stage   (js/PIXI.Container.)
-        sprite  (js/PIXI.Sprite. (get-texture "img/bunny.png"))]
-    (set! (-> sprite .-anchor .-x) 0.5)
-    (set! (-> sprite .-anchor .-y) 0.5)
-    (set! (-> sprite .-position .-x) 200)
-    (set! (-> sprite .-position .-y) 150)
-    (.addChild stage sprite)
-    stage))
+(defmulti create :pixi/type)
+
+(defmethod create :pixi.type/sprite [{:keys [pixi.sprite/texture]}]
+  (js/PIXI.Sprite. (get-texture texture)))
+
+(defmulti update-kv (fn [object k v] k))
+
+(defmethod update-kv :default [object _ _] object)
+
+(defmethod update-kv :pixi.object/position [object _ [x y]]
+  (set! (-> object .-position .-x) x)
+  (set! (-> object .-position .-y) y)
+  object)
+
+(defmethod update-kv :pixi.sprite/anchor [sprite _ [x y]]
+  (set! (-> sprite .-anchor .-x) x)
+  (set! (-> sprite .-anchor .-y) y)
+  sprite)
+
+(defmethod update-kv :pixi.sprite/texture [sprite _ texture]
+  (set! (.-texture sprite) (get-texture texture))
+  sprite)
+
+(defn update [object data]
+  (reduce-kv update-kv object data))
+
+(defn build [data]
+  (update (create data) data))
 
 (defn render [renderer scene]
   (let [render #(.render renderer (build scene))]

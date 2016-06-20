@@ -24,8 +24,7 @@
 
 (defn preload [assets callback]
   (run! #(.add loader %) assets)
-  (.once loader "complete" callback)
-  (.load loader))
+  (.load loader callback))
 
 (defn render [renderer scene]
   (let [render #(.render renderer (build scene))]

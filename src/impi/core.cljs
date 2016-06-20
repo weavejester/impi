@@ -53,11 +53,33 @@
   (set! (.-texture sprite) (get-texture texture))
   sprite)
 
-(defn update [object data]
-  (reduce-kv update-kv object data))
+(defn update [object old-def new-def]
+  (reduce-kv (fn [o k v] (cond-> o (not= v (old-def k)) (update-kv k v)))
+             object
+             new-def))
 
-(defn build [data]
-  (update (create data) data))
+(defonce cache (atom {}))
+
+(defn- cache-key [parent-key data]
+  (conj parent-key (:impi/key data (:pixi/type data))))
+
+(defn- cache! [object key definition]
+  (swap! cache assoc key {:obj object :def definition}))
+
+(defn build
+  ([definition]
+   (build [] definition))
+  ([parent-key definition]
+   (let [key (cache-key parent-key definition)]
+     (if-let [cached (@cache key)]
+       (if (= (:def cached) definition)
+         (:obj cached)
+         (-> (:obj cached)
+             (update (:def cached) definition)
+             (doto (cache! key definition))))
+       (-> (create definition)
+           (update {} definition)
+           (doto (cache! key definition)))))))
 
 (defn render [renderer scene]
   (let [render #(.render renderer (build scene))]

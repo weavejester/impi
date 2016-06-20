@@ -19,5 +19,13 @@
     (.addChild stage sprite)
     stage))
 
+(def ^:private loader
+  (js/PIXI.loaders.Loader.))
+
+(defn preload [assets callback]
+  (run! #(.add loader %) assets)
+  (.once loader "complete" callback)
+  (.load loader))
+
 (defn render [renderer scene]
-  (.render renderer (build scene)))
+  (preload ["img/bunny.png"] #(.render renderer (build scene))))

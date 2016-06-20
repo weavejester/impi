@@ -12,9 +12,16 @@
 (def ^:private loader
   (js/PIXI.loaders.Loader.))
 
+(defn loaded? [asset]
+  (boolean (aget (.-resources loader) asset)))
+
 (defn load [assets callback]
-  (run! #(.add loader %) assets)
-  (.load loader callback))
+  (let [unloaded-assets (remove loaded? assets)]
+    (if (empty? unloaded-assets)
+      (callback)
+      (doto loader
+        (.add (clj->js unloaded-assets))
+        (.load (fn [_ _] (callback)))))))
 
 (defn get-texture [asset]
   (.-texture (aget (.-resources loader) asset)))

@@ -14,8 +14,7 @@
     (set! (.-innerHTML element) "")
     (.appendChild element (.-view renderer))))
 
-(def ^:private loader
-  (js/PIXI.loaders.Loader.))
+(def loader (js/PIXI.loaders.Loader.))
 
 (defn loaded? [asset]
   (boolean (aget (.-resources loader) asset)))

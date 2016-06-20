@@ -28,4 +28,5 @@
   (.load loader))
 
 (defn render [renderer scene]
-  (preload ["img/bunny.png"] #(.render renderer (build scene))))
+  (let [render #(.render renderer (build scene))]
+    (preload ["img/bunny.png"] #(js/requestAnimationFrame render))))

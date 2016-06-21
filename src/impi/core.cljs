@@ -45,26 +45,30 @@
              object
              new-def))
 
-(defonce cache (atom {}))
+(defn create [definition]
+  {:def {}, :obj (create-object definition)})
 
-(defn- cache! [object key definition]
-  (swap! cache assoc key {:obj object :def definition}))
+(defn update! [cached definition]
+  {:def definition, :obj (update-object! (:obj cached) (:def cached) definition)})
+
+(defonce cache (atom {}))
 
 (defn build
   ([definition]
    (build [] definition))
-  ([parent-key definition]
+  ([parent-index definition]
    {:pre (:impi/key definition)}
-   (let [key (conj parent-key (:impi/key definition))]
-     (if-let [cached (@cache key)]
+   (let [index  (conj parent-index (:impi/key definition))
+         cache! (fn [value] (swap! cache assoc index value))]
+     (if-let [cached (@cache index)]
        (if (= (:def cached) definition)
-         (:obj cached)
-         (-> (:obj cached)
-             (update-object! (:def cached) definition)
-             (doto (cache! key definition))))
-       (-> (create-object definition)
-           (update-object! {} definition)
-           (doto (cache! key definition)))))))
+         cached
+         (-> cached
+             (update! definition)
+             (doto cache!)))
+       (-> (create definition)
+           (update! definition)
+           (doto cache!))))))
 
 (defn render [renderer scene]
-  (js/requestAnimationFrame #(.render renderer (build scene))))
+  (js/requestAnimationFrame #(.render renderer (:obj (build scene)))))

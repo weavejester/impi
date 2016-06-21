@@ -35,26 +35,26 @@
 (defmethod create :pixi.type/sprite [_]
   (js/PIXI.Sprite.))
 
-(defmulti update-kv (fn [object k v] k))
+(defmulti update-key! (fn [object k v] k))
 
-(defmethod update-kv :default [object _ _] object)
+(defmethod update-key! :default [object _ _] object)
 
-(defmethod update-kv :pixi.object/position [object _ [x y]]
+(defmethod update-key! :pixi.object/position [object _ [x y]]
   (set! (-> object .-position .-x) x)
   (set! (-> object .-position .-y) y)
   object)
 
-(defmethod update-kv :pixi.sprite/anchor [sprite _ [x y]]
+(defmethod update-key! :pixi.sprite/anchor [sprite _ [x y]]
   (set! (-> sprite .-anchor .-x) x)
   (set! (-> sprite .-anchor .-y) y)
   sprite)
 
-(defmethod update-kv :pixi.sprite/texture [sprite _ texture]
+(defmethod update-key! :pixi.sprite/texture [sprite _ texture]
   (set! (.-texture sprite) (get-texture texture))
   sprite)
 
-(defn update [object old-def new-def]
-  (reduce-kv (fn [o k v] (cond-> o (not= v (old-def k)) (update-kv k v)))
+(defn update! [object old-def new-def]
+  (reduce-kv (fn [o k v] (cond-> o (not= v (old-def k)) (update-key! k v)))
              object
              new-def))
 
@@ -75,10 +75,10 @@
        (if (= (:def cached) definition)
          (:obj cached)
          (-> (:obj cached)
-             (update (:def cached) definition)
+             (update! (:def cached) definition)
              (doto (cache! key definition))))
        (-> (create definition)
-           (update {} definition)
+           (update! {} definition)
            (doto (cache! key definition)))))))
 
 (defn render [renderer scene]

@@ -5,7 +5,8 @@
   (impi/renderer [400 300]))
 
 (def state
-  (atom {:pixi/type            :pixi.type/sprite
+  (atom {:impi/key  :bunny
+         :pixi/type :pixi.type/sprite
          :pixi.object/position [200 150]
          :pixi.object/rotation 0.0
          :pixi.sprite/anchor   [0.5 0.5]

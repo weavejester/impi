@@ -48,9 +48,6 @@
 
 (defonce cache (atom {}))
 
-(defn- cache-key [parent-key data]
-  (conj parent-key (:impi/key data (:pixi/type data))))
-
 (defn- cache! [object key definition]
   (swap! cache assoc key {:obj object :def definition}))
 
@@ -58,7 +55,8 @@
   ([definition]
    (build [] definition))
   ([parent-key definition]
-   (let [key (cache-key parent-key definition)]
+   {:pre (:impi/key definition)}
+   (let [key (conj parent-key (:impi/key definition))]
      (if-let [cached (@cache key)]
        (if (= (:def cached) definition)
          (:obj cached)

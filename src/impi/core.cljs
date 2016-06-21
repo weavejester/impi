@@ -16,19 +16,16 @@
 
 (def loader (js/PIXI.loaders.Loader.))
 
-(defn loaded? [asset]
-  (boolean (aget (.-resources loader) asset)))
+(defn get-resource [name]
+  (aget (.-resources loader) name))
 
 (defn load [assets callback]
-  (let [unloaded-assets (remove loaded? assets)]
+  (let [unloaded-assets (remove get-resource assets)]
     (if (empty? unloaded-assets)
       (callback)
       (doto loader
         (.add (clj->js unloaded-assets))
         (.load (fn [_ _] (callback)))))))
-
-(defn get-texture [asset]
-  (.-texture (aget (.-resources loader) asset)))
 
 (defmulti create :pixi/type)
 
@@ -50,7 +47,7 @@
   sprite)
 
 (defmethod update-key! :pixi.sprite/texture [sprite _ texture]
-  (set! (.-texture sprite) (get-texture texture))
+  (set! (.-texture sprite) (.-texture (get-resource texture)))
   sprite)
 
 (defn update! [object old-def new-def]

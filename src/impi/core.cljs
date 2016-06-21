@@ -41,7 +41,7 @@
   sprite)
 
 (defn update-object! [object old-def new-def]
-  (reduce-kv (fn [o k v] (cond-> o (not= v (old-def k)) (update-prop! k v)))
+  (reduce-kv (fn [o k v] (if (= v (old-def k)) o (update-prop! o k v)))
              object
              new-def))
 

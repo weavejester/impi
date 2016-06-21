@@ -32,8 +32,8 @@
 
 (defmulti create :pixi/type)
 
-(defmethod create :pixi.type/sprite [{:keys [pixi.sprite/texture]}]
-  (js/PIXI.Sprite. (get-texture texture)))
+(defmethod create :pixi.type/sprite [_]
+  (js/PIXI.Sprite.))
 
 (defmulti update-kv (fn [object k v] k))
 

@@ -14,19 +14,6 @@
     (set! (.-innerHTML element) "")
     (.appendChild element (.-view renderer))))
 
-(def loader (js/PIXI.loaders.Loader.))
-
-(defn get-resource [name]
-  (aget (.-resources loader) name))
-
-(defn load [assets callback]
-  (let [unloaded-assets (remove get-resource assets)]
-    (if (empty? unloaded-assets)
-      (callback)
-      (doto loader
-        (.add (clj->js unloaded-assets))
-        (.load (fn [_ _] (callback)))))))
-
 (defmulti create :pixi/type)
 
 (defmethod create :pixi.type/sprite [_]
@@ -51,7 +38,7 @@
   sprite)
 
 (defmethod update-key! :pixi.sprite/texture [sprite _ texture]
-  (set! (.-texture sprite) (.-texture (get-resource texture)))
+  (set! (.-texture sprite) (js/PIXI.Texture.fromImage texture))
   sprite)
 
 (defn update! [object old-def new-def]
@@ -83,5 +70,4 @@
            (doto (cache! key definition)))))))
 
 (defn render [renderer scene]
-  (let [render #(.render renderer (build scene))]
-    (load ["img/bunny.png"] #(js/requestAnimationFrame render))))
+  (js/requestAnimationFrame #(.render renderer (build scene))))

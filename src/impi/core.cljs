@@ -41,6 +41,10 @@
   (set! (-> object .-position .-y) y)
   object)
 
+(defmethod update-key! :pixi.object/rotation [object _ angle]
+  (set! (.-rotation object) angle)
+  object)
+
 (defmethod update-key! :pixi.sprite/anchor [sprite _ [x y]]
   (set! (-> sprite .-anchor .-x) x)
   (set! (-> sprite .-anchor .-y) y)

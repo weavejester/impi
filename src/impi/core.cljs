@@ -1,5 +1,4 @@
 (ns impi.core
-  (:refer-clojure :exclude [load update])
   (:require cljsjs.pixi))
 
 (defn renderer [[w h]]
@@ -14,35 +13,35 @@
     (set! (.-innerHTML element) "")
     (.appendChild element (.-view renderer))))
 
-(defmulti create :pixi/type)
+(defmulti create-object :pixi/type)
 
-(defmethod create :pixi.type/sprite [_]
+(defmethod create-object :pixi.type/sprite [_]
   (js/PIXI.Sprite.))
 
-(defmulti update-key! (fn [object k v] k))
+(defmulti update-prop! (fn [object k v] k))
 
-(defmethod update-key! :default [object _ _] object)
+(defmethod update-prop! :default [object _ _] object)
 
-(defmethod update-key! :pixi.object/position [object _ [x y]]
+(defmethod update-prop! :pixi.object/position [object _ [x y]]
   (set! (-> object .-position .-x) x)
   (set! (-> object .-position .-y) y)
   object)
 
-(defmethod update-key! :pixi.object/rotation [object _ angle]
+(defmethod update-prop! :pixi.object/rotation [object _ angle]
   (set! (.-rotation object) angle)
   object)
 
-(defmethod update-key! :pixi.sprite/anchor [sprite _ [x y]]
+(defmethod update-prop! :pixi.sprite/anchor [sprite _ [x y]]
   (set! (-> sprite .-anchor .-x) x)
   (set! (-> sprite .-anchor .-y) y)
   sprite)
 
-(defmethod update-key! :pixi.sprite/texture [sprite _ texture]
+(defmethod update-prop! :pixi.sprite/texture [sprite _ texture]
   (set! (.-texture sprite) (js/PIXI.Texture.fromImage texture))
   sprite)
 
-(defn update! [object old-def new-def]
-  (reduce-kv (fn [o k v] (cond-> o (not= v (old-def k)) (update-key! k v)))
+(defn update-object! [object old-def new-def]
+  (reduce-kv (fn [o k v] (cond-> o (not= v (old-def k)) (update-prop! k v)))
              object
              new-def))
 
@@ -61,10 +60,10 @@
        (if (= (:def cached) definition)
          (:obj cached)
          (-> (:obj cached)
-             (update! (:def cached) definition)
+             (update-object! (:def cached) definition)
              (doto (cache! key definition))))
-       (-> (create definition)
-           (update! {} definition)
+       (-> (create-object definition)
+           (update-object! {} definition)
            (doto (cache! key definition)))))))
 
 (defn render [renderer scene]

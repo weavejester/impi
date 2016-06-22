@@ -13,49 +13,70 @@
     (set! (.-innerHTML element) "")
     (.appendChild element (.-view renderer))))
 
+(declare build!)
+
 (defmulti create-object :pixi/type)
 
 (defmethod create-object :pixi.type/sprite [_]
   (js/PIXI.Sprite.))
 
-(defmulti update-prop! (fn [object k v] k))
+(defmethod create-object :pixi.type/container [_]
+  (js/PIXI.Container.))
 
-(defmethod update-prop! :default [object _ _] object)
+(defmulti update-prop! (fn [object index k v] k))
 
-(defmethod update-prop! :pixi.object/position [object _ [x y]]
+(defmethod update-prop! :default [object _ _ _] object)
+
+(defmethod update-prop! :pixi.object/position [object _ _ [x y]]
   (set! (-> object .-position .-x) x)
   (set! (-> object .-position .-y) y)
   object)
 
-(defmethod update-prop! :pixi.object/rotation [object _ angle]
+(defmethod update-prop! :pixi.object/rotation [object _ _ angle]
   (set! (.-rotation object) angle)
   object)
 
-(defmethod update-prop! :pixi.sprite/anchor [sprite _ [x y]]
+(defmethod update-prop! :pixi.container/children [container index _ children]
+  (let [length (-> container .-children .-length)]
+    (loop [i 0, children children]
+      (if (seq children)
+        (let [child-obj (:obj (build! index (first children)))]
+          (if (>= i length)
+            (.addChild container child-obj)
+            (when-not (identical? child-obj (.getChildAt container i))
+              (.removeChildAt container i)
+              (.addChildAt container child-obj i)))
+          (recur (inc i) (rest children)))
+        (do (when (< (inc i) length)
+              (.removeChildren container (inc i)))
+            container)))))
+
+(defmethod update-prop! :pixi.sprite/anchor [sprite _ _ [x y]]
   (set! (-> sprite .-anchor .-x) x)
   (set! (-> sprite .-anchor .-y) y)
   sprite)
 
-(defmethod update-prop! :pixi.sprite/texture [sprite _ texture]
+(defmethod update-prop! :pixi.sprite/texture [sprite _ _ texture]
   (set! (.-texture sprite) (js/PIXI.Texture.fromImage texture))
   sprite)
 
-(defn update-object! [object old-def new-def]
-  (reduce-kv (fn [o k v] (if (= v (old-def k)) o (update-prop! o k v)))
+(defn update-object! [object index old-def new-def]
+  (reduce-kv (fn [o k v] (if (= v (old-def k)) o (update-prop! o index k v)))
              object
              new-def))
 
 (defn create [definition]
   {:def {}, :obj (create-object definition)})
 
-(defn update! [cached definition]
-  {:def definition, :obj (update-object! (:obj cached) (:def cached) definition)})
+(defn update! [cached index definition]
+  {:def definition
+   :obj (update-object! (:obj cached) index (:def cached) definition)})
 
 (defonce cache (atom {}))
 
-(defn build
+(defn build!
   ([definition]
-   (build [] definition))
+   (build! [] definition))
   ([parent-index definition]
    {:pre (:impi/key definition)}
    (let [index  (conj parent-index (:impi/key definition))
@@ -64,11 +85,11 @@
        (if (= (:def cached) definition)
          cached
          (-> cached
-             (update! definition)
+             (update! index definition)
              (doto cache!)))
        (-> (create definition)
-           (update! definition)
+           (update! index definition)
            (doto cache!))))))
 
 (defn render [renderer scene]
-  (js/requestAnimationFrame #(.render renderer (:obj (build scene)))))
+  (js/requestAnimationFrame #(.render renderer (:obj (build! scene)))))

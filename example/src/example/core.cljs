@@ -17,7 +17,7 @@
       :pixi.sprite/texture  "img/bunny.png"}]}))
 
 (defn animate [state]
-  (swap! state update :pixi.object/rotation + 0.01)
+  (swap! state update-in [:pixi.container/children 0 :pixi.object/rotation] + 0.1)
   (js/setTimeout #(animate state) 16))
 
 (let [element (.getElementById js/document "app")]

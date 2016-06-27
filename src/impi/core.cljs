@@ -13,6 +13,11 @@
     (set! (.-innerHTML element) "")
     (.appendChild element (.-view renderer))))
 
+(defn- replace-children [container children]
+  (.removeChildren container)
+  (doseq [child children]
+    (.addChild container child)))
+
 (declare build!)
 
 (defmulti create-object :pixi/type)
@@ -37,19 +42,8 @@
   object)
 
 (defmethod update-prop! :pixi.container/children [container index _ children]
-  (let [length (-> container .-children .-length)]
-    (loop [i 0, children children]
-      (if (seq children)
-        (let [child-obj (:obj (build! index (first children)))]
-          (if (>= i length)
-            (.addChild container child-obj)
-            (when-not (identical? child-obj (.getChildAt container i))
-              (.removeChildAt container i)
-              (.addChildAt container child-obj i)))
-          (recur (inc i) (rest children)))
-        (do (when (< (inc i) length)
-              (.removeChildren container (inc i)))
-            container)))))
+  (replace-children container (map #(:obj (build! index %)) children))
+  container)
 
 (defmethod update-prop! :pixi.sprite/anchor [sprite _ _ [x y]]
   (set! (-> sprite .-anchor .-x) x)

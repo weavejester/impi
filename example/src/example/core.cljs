@@ -4,17 +4,31 @@
 (defonce renderer
   (impi/renderer [400 300]))
 
-(def state
-  (atom
-   {:impi/key  :stage
-    :pixi/type :pixi.type/container
-    :pixi.container/children
-    [{:impi/key  :bunny
-      :pixi/type :pixi.type/sprite
-      :pixi.object/position [200 150]
-      :pixi.object/rotation 0.0
-      :pixi.sprite/anchor   [0.5 0.5]
-      :pixi.sprite/texture  "img/bunny.png"}]}))
+(defonce state
+  (atom {}))
+
+(reset! state
+        {:impi/key  :stage
+         :pixi/type :pixi.type/container
+         :pixi.container/children
+         [{:impi/key  :bunny
+           :pixi/type :pixi.type/sprite
+           :pixi.object/position [200 150]
+           :pixi.object/rotation 0.0
+           :pixi.sprite/anchor   [0.5 0.5]
+           :pixi.sprite/texture  "img/bunny.png"}
+          {:impi/key  :bunny2
+           :pixi/type :pixi.type/sprite
+           :pixi.object/position [100 100]
+           :pixi.object/rotation 0.0
+           :pixi.sprite/anchor   [0.5 0.5]
+           :pixi.sprite/texture  "img/bunny.png"}
+          {:impi/key  :bunny3
+           :pixi/type :pixi.type/sprite
+           :pixi.object/position [110 100]
+           :pixi.object/rotation 0.0
+           :pixi.sprite/anchor   [0.5 0.5]
+           :pixi.sprite/texture  "img/bunny.png"}]})
 
 (defn animate [state]
   (swap! state update-in [:pixi.container/children 0 :pixi.object/rotation] + 0.1)
@@ -23,5 +37,7 @@
 (let [element (.getElementById js/document "app")]
   (impi/mount renderer element)
   (impi/render renderer @state)
-  (add-watch state ::render (fn [_ _ _ s] (impi/render renderer s)))
+  (add-watch state ::render (fn [_ _ _ s] (impi/render renderer s))))
+
+(defonce x
   (animate state))

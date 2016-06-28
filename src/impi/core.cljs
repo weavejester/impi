@@ -13,10 +13,67 @@
     (set! (.-innerHTML element) "")
     (.appendChild element (.-view renderer))))
 
+(defn- mark-child-added [child index]
+  (set! (.-__impiAdded child) true)
+  (set! (.-__impiIndex child) index))
+
+(defn- mark-child-removed [child index]
+  (set! (.-__impiRemoved child) true)
+  (set! (.-__impiIndex child) index))
+
+(defn- clean-child [child]
+  (js-delete child "__impiRemoved")
+  (js-delete child "__impiAdded")
+  (js-delete child "__impiIndex"))
+
+(defn- remove-child [container child index]
+  (set! (.-parent child) nil)
+  (.onChildrenChange container index)
+  (.emit child "removed" container))
+
+(defn- add-child [container child index]
+  (when-let [parent (.-parent child)]
+    (.removeChild parent child))
+  (set! (.-parent child) container)
+  (.onChildrenChange container index)
+  (.emit child "added" container))
+
+(defn- remove-children-after [container index]
+  (let [container-children (.-children container)]
+    (loop [i index]
+      (when (< i container-size)
+        (remove-child container (aget container-children i) i)))
+    (.splice container-children index)))
+
 (defn- replace-children [container children]
-  (.removeChildren container)
-  (doseq [child children]
-    (.addChild container child)))
+  (let [container-children (.-children container)
+        container-size     (.-length container-children)]
+    (loop [i 0, children children, changed ()]
+      (if (seq children)
+        (let [child (first children)]
+          (if (< i container-size)
+            (let [old-child (aget container-children i)]
+              (if (identical? child old-child)
+                (recur (inc i) (rest children) changed)
+                (do (aset container-children i child)
+                    (mark-child-removed old-child i)
+                    (mark-child-added child i)
+                    (recur (inc i)
+                           (rest children)
+                           (-> changed (conj child) (conj old-child))))))
+            (do (.push container-children child)
+                (mark-child-added child i)
+                (recur (inc i) (rest children) (conj changed child)))))
+        (do (remove-children-after container i)
+            (doseq [child changed]
+              (let [added?   (.-__impiAdded child)
+                    removed? (.-__impiRemoved child)
+                    index    (.-__impiIndex child)]
+                (clean-child child)
+                (when-not (and added? removed?)
+                  (if added?
+                    (add-child container child index)
+                    (remove-child container child index))))))))))
 
 (declare build!)
 

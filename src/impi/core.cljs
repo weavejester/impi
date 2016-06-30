@@ -57,11 +57,14 @@
     (set-parent child nil)))
 
 (defn- replace-children [container children]
-  (let [replaced (overwrite-children container children)
-        removed  (trim-children container (count children))]
-    (run! clear-parent replaced)
-    (run! clear-parent removed)
-    (run! #(set-parent % container) (.-children container))))
+  (let [length   (-> container .-children .-length)
+        replaced (overwrite-children container children)
+        removed  (trim-children container (count children))
+        changed? (or (seq replaced) (not= length (-> container .-children .-length)))]
+    (when changed?
+      (run! clear-parent replaced)
+      (run! clear-parent removed)
+      (run! #(set-parent % container) (.-children container)))))
 
 (declare build!)
 

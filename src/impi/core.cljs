@@ -13,67 +13,55 @@
     (set! (.-innerHTML element) "")
     (.appendChild element (.-view renderer))))
 
-(defn- mark-child-added [child index]
-  (set! (.-__impiAdded child) true)
-  (set! (.-__impiIndex child) index))
+(defn- update-count [child f]
+  (set! (.-impiCount child) (f (.-impiCount child))))
 
-(defn- mark-child-removed [child index]
-  (set! (.-__impiRemoved child) true)
-  (set! (.-__impiIndex child) index))
+(defn- replace-child [container child i]
+  (let [old-child (aget (.-children container) i)]
+    (when-not (identical? child old-child)
+      (aset (.-children container) i child)
+      (update-count old-child (fnil dec 1))
+      (update-count child (fnil inc 0))
+      old-child)))
 
-(defn- clean-child [child]
-  (js-delete child "__impiRemoved")
-  (js-delete child "__impiAdded")
-  (js-delete child "__impiIndex"))
+(defn- append-child [container child]
+  (.push (.-children container) child)
+  (update-count child (fnil inc 0)))
 
-(defn- remove-child [container child index]
-  (set! (.-parent child) nil)
-  (.onChildrenChange container index)
-  (.emit child "removed" container))
-
-(defn- add-child [container child index]
-  (when-let [parent (.-parent child)]
-    (.removeChild parent child))
-  (set! (.-parent child) container)
-  (.onChildrenChange container index)
-  (.emit child "added" container))
-
-(defn- remove-children-after [container index]
-  (let [container-children (.-children container)]
-    (loop [i index]
-      (when (< i container-size)
-        (remove-child container (aget container-children i) i)))
-    (.splice container-children index)))
-
-(defn- replace-children [container children]
-  (let [container-children (.-children container)
-        container-size     (.-length container-children)]
-    (loop [i 0, children children, changed ()]
+(defn- overwrite-children [container children]
+  (let [length (-> container .-children .-length)]
+    (loop [i 0, children children, replaced ()]
       (if (seq children)
         (let [child (first children)]
-          (if (< i container-size)
-            (let [old-child (aget container-children i)]
-              (if (identical? child old-child)
-                (recur (inc i) (rest children) changed)
-                (do (aset container-children i child)
-                    (mark-child-removed old-child i)
-                    (mark-child-added child i)
-                    (recur (inc i)
-                           (rest children)
-                           (-> changed (conj child) (conj old-child))))))
-            (do (.push container-children child)
-                (mark-child-added child i)
-                (recur (inc i) (rest children) (conj changed child)))))
-        (do (remove-children-after container i)
-            (doseq [child changed]
-              (let [added?   (.-__impiAdded child)
-                    removed? (.-__impiRemoved child)
-                    index    (.-__impiIndex child)]
-                (clean-child child)
-                (when-not (and added? removed?)
-                  (if added?
-                    (add-child container child index)
-                    (remove-child container child index))))))))))
+          (if (< i length)
+            (if-let [old-child (replace-child container child i)]
+              (recur (inc i) (rest children) (cons old-child replaced))
+              (recur (inc i) (rest children) replaced))
+            (do (append-child container child)
+                (recur (inc i) (rest children) replaced))))
+        replaced))))
+
+(defn- trim-children [container index]
+  (let [children (.-children container)]
+    (if (< index (.-length children))
+      (let [removed (.slice children index)]
+        (.splice children index)
+        removed))))
+
+(defn- set-parent [child parent]
+  (set! (.-parent child) parent)
+  (js-delete child "impiCount"))
+
+(defn- clear-parent [child]
+  (when (zero? (.-impiCount child))
+    (set-parent child nil)))
+
+(defn- replace-children [container children]
+  (let [replaced (overwrite-children container children)
+        removed  (trim-children container (count children))]
+    (run! clear-parent replaced)
+    (run! clear-parent removed)
+    (run! #(set-parent % container) (.-children container))))
 
 (declare build!)
 

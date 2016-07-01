@@ -66,6 +66,11 @@
       (run! clear-parent removed)
       (run! #(set-parent % container) (.-children container)))))
 
+(defmulti create-texture (comp :pixi.asset/type :pixi.texture/source))
+
+(defmethod create-texture :pixi.asset.type/image [texture]
+  (js/PIXI.Texture.fromImage (-> texture :pixi.texture/source :pixi.asset/uri)))
+
 (declare build!)
 
 (defmulti create-object :pixi/type)
@@ -99,7 +104,7 @@
   sprite)
 
 (defmethod update-prop! :pixi.sprite/texture [sprite _ _ texture]
-  (set! (.-texture sprite) (js/PIXI.Texture.fromImage texture))
+  (set! (.-texture sprite) (create-texture texture))
   sprite)
 
 (defn update-object! [object index old-def new-def]

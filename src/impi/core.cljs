@@ -95,12 +95,13 @@
       (run! clear-parent removed)
       (run! #(set-parent % container) (.-children container)))))
 
+(declare build-object!)
+(declare build-texture!)
+
 (defmulti create-texture (comp :pixi.asset/type :pixi.texture/source))
 
 (defmethod create-texture :pixi.asset.type/image [texture]
   (js/PIXI.Texture.fromImage (-> texture :pixi.texture/source :pixi.asset/uri)))
-
-(declare build-object!)
 
 (defmulti create-object :pixi/type)
 
@@ -110,34 +111,37 @@
 (defmethod create-object :pixi.type/container [_]
   (js/PIXI.Container.))
 
-(defmulti update-object-key! (fn [object index k v] k))
+(defmulti update-key! (fn [object index k v] k))
 
-(defmethod update-object-key! :default [object _ _ _] object)
+(defmethod update-key! :default [object _ _ _] object)
 
-(defmethod update-object-key! :pixi.object/position [object _ _ [x y]]
+(defmethod update-key! :pixi.object/position [object _ _ [x y]]
   (set! (-> object .-position .-x) x)
   (set! (-> object .-position .-y) y)
   object)
 
-(defmethod update-object-key! :pixi.object/rotation [object _ _ angle]
+(defmethod update-key! :pixi.object/rotation [object _ _ angle]
   (set! (.-rotation object) angle)
   object)
 
-(defmethod update-object-key! :pixi.container/children [container index _ children]
+(defmethod update-key! :pixi.container/children [container index _ children]
   (replace-children container (map #(:obj (build-object! index %)) children))
   container)
 
-(defmethod update-object-key! :pixi.sprite/anchor [sprite _ _ [x y]]
+(defmethod update-key! :pixi.sprite/anchor [sprite _ _ [x y]]
   (set! (-> sprite .-anchor .-x) x)
   (set! (-> sprite .-anchor .-y) y)
   sprite)
 
-(defmethod update-object-key! :pixi.sprite/texture [sprite _ _ texture]
-  (set! (.-texture sprite) (create-texture texture))
+(defmethod update-key! :pixi.sprite/texture [sprite index _ texture]
+  (set! (.-texture sprite) (:obj (build-texture! index texture)))
   sprite)
 
+(def build-texture!
+  (builder (constantly :pixi.sprite/texture) create-texture update-key!))
+
 (def build-object!
-  (builder :impi/key create-object update-object-key!))
+  (builder :impi/key create-object update-key!))
 
 (defn render [renderer scene]
   (js/requestAnimationFrame #(.render renderer (:obj (build-object! scene)))))

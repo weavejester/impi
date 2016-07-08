@@ -124,6 +124,11 @@
   (set! (.-rotation object) angle)
   object)
 
+(defmethod update-key! :pixi.object/scale [object _ _ [x y]]
+  (set! (-> object .-scale .-x) x)
+  (set! (-> object .-scale .-y) y)
+  object)
+
 (defmethod update-key! :pixi.container/children [container index _ children]
   (replace-children container (map #(:obj (build-object! index %)) children))
   container)

@@ -23,6 +23,7 @@
           {:impi/key  :bunny2
            :pixi/type :pixi.type/sprite
            :pixi.object/position [100 100]
+           :pixi.object/scale    [3 3]
            :pixi.object/rotation 0.0
            :pixi.sprite/anchor   [0.5 0.5]
            :pixi.sprite/texture

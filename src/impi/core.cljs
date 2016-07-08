@@ -81,34 +81,34 @@
 (defmethod create-object :pixi.type/container [_]
   (js/PIXI.Container.))
 
-(defmulti update-prop! (fn [object index k v] k))
+(defmulti update-object-key! (fn [object index k v] k))
 
-(defmethod update-prop! :default [object _ _ _] object)
+(defmethod update-object-key! :default [object _ _ _] object)
 
-(defmethod update-prop! :pixi.object/position [object _ _ [x y]]
+(defmethod update-object-key! :pixi.object/position [object _ _ [x y]]
   (set! (-> object .-position .-x) x)
   (set! (-> object .-position .-y) y)
   object)
 
-(defmethod update-prop! :pixi.object/rotation [object _ _ angle]
+(defmethod update-object-key! :pixi.object/rotation [object _ _ angle]
   (set! (.-rotation object) angle)
   object)
 
-(defmethod update-prop! :pixi.container/children [container index _ children]
+(defmethod update-object-key! :pixi.container/children [container index _ children]
   (replace-children container (map #(:obj (build! index %)) children))
   container)
 
-(defmethod update-prop! :pixi.sprite/anchor [sprite _ _ [x y]]
+(defmethod update-object-key! :pixi.sprite/anchor [sprite _ _ [x y]]
   (set! (-> sprite .-anchor .-x) x)
   (set! (-> sprite .-anchor .-y) y)
   sprite)
 
-(defmethod update-prop! :pixi.sprite/texture [sprite _ _ texture]
+(defmethod update-object-key! :pixi.sprite/texture [sprite _ _ texture]
   (set! (.-texture sprite) (create-texture texture))
   sprite)
 
 (defn update-object! [object index old-def new-def]
-  (reduce-kv (fn [o k v] (if (= v (old-def k)) o (update-prop! o index k v)))
+  (reduce-kv (fn [o k v] (if (= v (old-def k)) o (update-object-key! o index k v)))
              object
              new-def))
 

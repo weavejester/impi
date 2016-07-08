@@ -95,6 +95,10 @@
       (run! clear-parent removed)
       (run! #(set-parent % container) (.-children container)))))
 
+(def ^:private scale-modes
+  {:pixi.texture.scale-mode/linear  js/PIXI.SCALE_MODES.LINEAR
+   :pixi.texture.scale-mode/nearest js/PIXI.SCALE_MODES.NEAREST})
+
 (declare build-object!)
 (declare build-texture!)
 
@@ -141,6 +145,10 @@
 (defmethod update-key! :pixi.sprite/texture [sprite index _ texture]
   (set! (.-texture sprite) (:obj (build-texture! index texture)))
   sprite)
+
+(defmethod update-key! :pixi.texture/scale-mode [texture _ _ mode]
+  (set! (.-scaleMode texture) (scale-modes mode))
+  texture)
 
 (def build-texture!
   (builder (constantly :pixi.sprite/texture) create-texture update-key!))

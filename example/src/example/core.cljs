@@ -23,11 +23,12 @@
           {:impi/key  :bunny2
            :pixi/type :pixi.type/sprite
            :pixi.object/position [100 100]
-           :pixi.object/scale    [3 3]
+           :pixi.object/scale    [10 10]
            :pixi.object/rotation 0.0
            :pixi.sprite/anchor   [0.5 0.5]
            :pixi.sprite/texture
-           {:pixi.texture/source
+           {:pixi.texture/scale-mode :pixi.texture.scale-mode/nearest
+            :pixi.texture/source
             {:pixi.asset/type :pixi.asset.type/image
              :pixi.asset/uri  "img/bunny.png"}}}
           {:impi/key  :bunny3

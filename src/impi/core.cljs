@@ -13,6 +13,35 @@
     (set! (.-innerHTML element) "")
     (.appendChild element (.-view renderer))))
 
+(defonce cache (atom {}))
+
+(defn- updater [updatef]
+  (fn [cached index definition]
+    {:def definition
+     :obj (let [old-def (:def cached)]
+            (reduce-kv
+             (fn [o k v] (if (= v (old-def k)) o (updatef o index k v)))
+             (:obj cached)
+             definition))}))
+
+(defn- builder [keyf createf updatef]
+  (let [update! (updater updatef)]
+    (fn build
+      ([definition]
+       (build [] definition))
+      ([index definition]
+       (let [index   (conj index (keyf definition))
+             cache!  (fn [value] (swap! cache assoc index value))]
+         (if-let [cached (@cache index)]
+           (if (= (:def cached) definition)
+             cached
+             (-> cached
+                 (update! index definition)
+                 (doto cache!)))
+           (-> {:def {}, :obj (createf definition)}
+               (update! index definition)
+               (doto cache!))))))))
+
 (defn- update-count [child f]
   (set! (.-impiCount child) (f (.-impiCount child))))
 
@@ -71,7 +100,7 @@
 (defmethod create-texture :pixi.asset.type/image [texture]
   (js/PIXI.Texture.fromImage (-> texture :pixi.texture/source :pixi.asset/uri)))
 
-(declare build!)
+(declare build-object!)
 
 (defmulti create-object :pixi/type)
 
@@ -95,7 +124,7 @@
   object)
 
 (defmethod update-object-key! :pixi.container/children [container index _ children]
-  (replace-children container (map #(:obj (build! index %)) children))
+  (replace-children container (map #(:obj (build-object! index %)) children))
   container)
 
 (defmethod update-object-key! :pixi.sprite/anchor [sprite _ _ [x y]]
@@ -107,36 +136,8 @@
   (set! (.-texture sprite) (create-texture texture))
   sprite)
 
-(defn update-object! [object index old-def new-def]
-  (reduce-kv (fn [o k v] (if (= v (old-def k)) o (update-object-key! o index k v)))
-             object
-             new-def))
-
-(defn create [definition]
-  {:def {}, :obj (create-object definition)})
-
-(defn update! [cached index definition]
-  {:def definition
-   :obj (update-object! (:obj cached) index (:def cached) definition)})
-
-(defonce cache (atom {}))
-
-(defn build!
-  ([definition]
-   (build! [] definition))
-  ([parent-index definition]
-   {:pre (:impi/key definition)}
-   (let [index  (conj parent-index (:impi/key definition))
-         cache! (fn [value] (swap! cache assoc index value))]
-     (if-let [cached (@cache index)]
-       (if (= (:def cached) definition)
-         cached
-         (-> cached
-             (update! index definition)
-             (doto cache!)))
-       (-> (create definition)
-           (update! index definition)
-           (doto cache!))))))
+(def build-object!
+  (builder :impi/key create-object update-object-key!))
 
 (defn render [renderer scene]
-  (js/requestAnimationFrame #(.render renderer (:obj (build! scene)))))
+  (js/requestAnimationFrame #(.render renderer (:obj (build-object! scene)))))

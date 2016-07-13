@@ -1,6 +1,8 @@
 (ns example.core
   (:require [impi.core :as impi]))
 
+(enable-console-print!)
+
 (defonce renderer
   (impi/renderer [400 300]))
 

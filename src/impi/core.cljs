@@ -151,11 +151,14 @@
   (set! (.-scaleMode texture) (scale-modes mode))
   texture)
 
+(defn- object-key [parent-key definition]
+  (conj (or parent-key []) (:impi/key definition)))
+
 (def build-texture!
   (builder texture-cache #(key %2) val create-texture update-key!))
 
 (def build-object!
-  (builder object-cache #(conj %1 (:impi/key %2)) identity create-object update-key!))
+  (builder object-cache object-key identity create-object update-key!))
 
 (defn render [renderer {:keys [:impi/textures :impi/root]}]
   (js/requestAnimationFrame

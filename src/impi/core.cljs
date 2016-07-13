@@ -13,33 +13,32 @@
     (set! (.-innerHTML element) "")
     (.appendChild element (.-view renderer))))
 
-(defonce cache (atom {}))
-
 (defn- updater [updatef]
-  (fn [cached index definition]
+  (fn [cached key definition]
     {:def definition
      :obj (let [old-def (:def cached)]
             (reduce-kv
-             (fn [o k v] (if (= v (old-def k)) o (updatef o index k v)))
+             (fn [o k v] (if (= v (old-def k)) o (updatef o key k v)))
              (:obj cached)
              definition))}))
 
-(defn- builder [keyf createf updatef]
+(defn- builder [cache keyf valf createf updatef]
   (let [update! (updater updatef)]
     (fn build
       ([definition]
-       (build [] definition))
-      ([index definition]
-       (let [index   (conj index (keyf definition))
-             cache!  (fn [value] (swap! cache assoc index value))]
-         (if-let [cached (@cache index)]
-           (if (= (:def cached) definition)
+       (build nil definition))
+      ([parent-key definition]
+       (let [key    (keyf parent-key definition)
+             value  (valf definition)
+             cache! #(swap! cache assoc key %)]
+         (if-let [cached (@cache key)]
+           (if (= (:def cached) value)
              cached
              (-> cached
-                 (update! index definition)
+                 (update! key value)
                  (doto cache!)))
-           (-> {:def {}, :obj (createf definition)}
-               (update! index definition)
+           (-> {:def {}, :obj (createf value)}
+               (update! key value)
                (doto cache!))))))))
 
 (defn- update-count [child f]
@@ -99,8 +98,10 @@
   {:pixi.texture.scale-mode/linear  js/PIXI.SCALE_MODES.LINEAR
    :pixi.texture.scale-mode/nearest js/PIXI.SCALE_MODES.NEAREST})
 
+(defonce texture-cache (atom {}))
+(defonce object-cache  (atom {}))
+
 (declare build-object!)
-(declare build-texture!)
 
 (defmulti create-texture (comp :pixi.asset/type :pixi.texture/source))
 
@@ -115,7 +116,7 @@
 (defmethod create-object :pixi.type/container [_]
   (js/PIXI.Container.))
 
-(defmulti update-key! (fn [object index k v] k))
+(defmulti update-key! (fn [object cache-key key value] key))
 
 (defmethod update-key! :default [object _ _ _] object)
 
@@ -133,8 +134,8 @@
   (set! (-> object .-scale .-y) y)
   object)
 
-(defmethod update-key! :pixi.container/children [container index _ children]
-  (replace-children container (map #(:obj (build-object! index %)) children))
+(defmethod update-key! :pixi.container/children [container cache-key _ children]
+  (replace-children container (map #(:obj (build-object! cache-key %)) children))
   container)
 
 (defmethod update-key! :pixi.sprite/anchor [sprite _ _ [x y]]
@@ -142,8 +143,8 @@
   (set! (-> sprite .-anchor .-y) y)
   sprite)
 
-(defmethod update-key! :pixi.sprite/texture [sprite index _ texture]
-  (set! (.-texture sprite) (:obj (build-texture! index texture)))
+(defmethod update-key! :pixi.sprite/texture [sprite _ _ texture]
+  (set! (.-texture sprite) (:obj (@texture-cache texture)))
   sprite)
 
 (defmethod update-key! :pixi.texture/scale-mode [texture _ _ mode]
@@ -151,10 +152,13 @@
   texture)
 
 (def build-texture!
-  (builder (constantly :pixi.sprite/texture) create-texture update-key!))
+  (builder texture-cache #(key %2) val create-texture update-key!))
 
 (def build-object!
-  (builder :impi/key create-object update-key!))
+  (builder object-cache #(conj %1 (:impi/key %2)) identity create-object update-key!))
 
-(defn render [renderer scene]
-  (js/requestAnimationFrame #(.render renderer (:obj (build-object! scene)))))
+(defn render [renderer {:keys [:impi/textures :impi/root]}]
+  (js/requestAnimationFrame
+   (fn []
+     (run! build-texture! textures)
+     (.render renderer (:obj (build-object! root))))))

@@ -94,6 +94,11 @@
       (run! clear-parent removed)
       (run! #(set-parent % container) (.-children container)))))
 
+(defn- image [src]
+  (let [image (js/Image.)]
+    (set! (.-src image) src)
+    image))
+
 (def ^:private scale-modes
   {:pixi.texture.scale-mode/linear  js/PIXI.SCALE_MODES.LINEAR
    :pixi.texture.scale-mode/nearest js/PIXI.SCALE_MODES.NEAREST})
@@ -106,7 +111,9 @@
 (defmulti create-texture (comp :pixi.asset/type :pixi.texture/source))
 
 (defmethod create-texture :pixi.asset.type/image [texture]
-  (js/PIXI.Texture.fromImage (-> texture :pixi.texture/source :pixi.asset/uri)))
+  (let [source (-> texture :pixi.texture/source :pixi.asset/uri image)
+        mode   (-> texture :pixi.texture/scale-mode scale-modes)]
+    (js/PIXI.Texture. (js/PIXI.BaseTexture. source mode))))
 
 (defmulti create-object :pixi/type)
 

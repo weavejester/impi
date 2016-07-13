@@ -31,15 +31,15 @@
        (let [key    (keyf parent-key definition)
              value  (valf definition)
              cache! #(swap! cache assoc key %)]
-         (if-let [cached (@cache key)]
-           (if (= (:def cached) value)
-             cached
-             (-> cached
-                 (update! key value)
-                 (doto cache!)))
-           (-> {:def {}, :obj (createf value)}
-               (update! key value)
-               (doto cache!))))))))
+         (:obj (if-let [cached (@cache key)]
+                 (if (= (:def cached) value)
+                   cached
+                   (-> cached
+                       (update! key value)
+                       (doto cache!)))
+                 (-> {:def {}, :obj (createf value)}
+                     (update! key value)
+                     (doto cache!)))))))))
 
 (defn- update-count [child f]
   (set! (.-impiCount child) (f (.-impiCount child))))
@@ -135,7 +135,7 @@
   object)
 
 (defmethod update-key! :pixi.container/children [container cache-key _ children]
-  (replace-children container (map #(:obj (build-object! cache-key %)) children))
+  (replace-children container (map #(build-object! cache-key %) children))
   container)
 
 (defmethod update-key! :pixi.sprite/anchor [sprite _ _ [x y]]
@@ -161,4 +161,4 @@
   (js/requestAnimationFrame
    (fn []
      (run! build-texture! textures)
-     (.render renderer (:obj (build-object! root))))))
+     (.render renderer (build-object! root)))))

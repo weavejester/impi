@@ -13,34 +13,6 @@
     (set! (.-innerHTML element) "")
     (.appendChild element (.-view renderer))))
 
-(defn- updater [updatef]
-  (fn [cached key definition]
-    {:def definition
-     :obj (let [old-def (:def cached)]
-            (reduce-kv
-             (fn [o k v] (if (= v (old-def k)) o (updatef o key k v)))
-             (:obj cached)
-             definition))}))
-
-(defn- builder [cache keyf valf createf updatef]
-  (let [update! (updater updatef)]
-    (fn build
-      ([definition]
-       (build definition nil))
-      ([definition parent-key]
-       (let [key    (keyf parent-key definition)
-             value  (valf definition)
-             cache! #(swap! cache assoc key %)]
-         (:obj (if-let [cached (@cache key)]
-                 (if (= (:def cached) value)
-                   cached
-                   (-> cached
-                       (update! key value)
-                       (doto cache!)))
-                 (-> {:def {}, :obj (createf value)}
-                     (update! key value)
-                     (doto cache!)))))))))
-
 (defn- update-count [child f]
   (set! (.-impiCount child) (f (.-impiCount child))))
 
@@ -103,20 +75,22 @@
   {:pixi.texture.scale-mode/linear  js/PIXI.SCALE_MODES.LINEAR
    :pixi.texture.scale-mode/nearest js/PIXI.SCALE_MODES.NEAREST})
 
-(defonce texture-cache (atom {}))
-(defonce object-cache  (atom {}))
+(def cache (atom {}))
 
-(declare build-object!)
+(defn- cached-texture [key]
+  (:obj (@cache [:impi/textures key])))
 
-(defmulti create-object :pixi/type)
+(declare build!)
 
-(defmethod create-object :pixi.type/sprite [_]
+(defmulti create :pixi/type)
+
+(defmethod create :pixi.type/sprite [_]
   (js/PIXI.Sprite.))
 
-(defmethod create-object :pixi.type/container [_]
+(defmethod create :pixi.type/container [_]
   (js/PIXI.Container.))
 
-(defmethod create-object :pixi.type/texture [texture]
+(defmethod create :pixi.type/texture [texture]
   (let [source (-> texture :pixi.texture/source image)
         mode   (-> texture :pixi.texture/scale-mode scale-modes)]
     (js/PIXI.Texture. (js/PIXI.BaseTexture. source mode))))
@@ -140,7 +114,7 @@
   object)
 
 (defmethod update-key! :pixi.container/children [container cache-key _ children]
-  (replace-children container (map #(build-object! % cache-key) children))
+  (replace-children container (map #(build! % cache-key) children))
   container)
 
 (defmethod update-key! :pixi.sprite/anchor [sprite _ _ [x y]]
@@ -149,24 +123,36 @@
   sprite)
 
 (defmethod update-key! :pixi.sprite/texture [sprite _ _ texture]
-  (set! (.-texture sprite) (:obj (@texture-cache [texture])))
+  (set! (.-texture sprite) (cached-texture texture))
   sprite)
 
 (defmethod update-key! :pixi.texture/scale-mode [texture _ _ mode]
   (set! (.-scaleMode texture) (scale-modes mode))
   texture)
 
-(defn- object-key [parent-key definition]
-  (conj (or parent-key []) (:impi/key definition)))
+(defn- update! [cached key definition]
+  {:def definition
+   :obj (let [old-def (:def cached)]
+          (reduce-kv
+           (fn [o k v] (if (= v (old-def k)) o (update-key! o key k v)))
+           (:obj cached)
+           definition))})
 
-(def build-texture!
-  (builder texture-cache object-key identity create-object update-key!))
-
-(def build-object!
-  (builder object-cache object-key identity create-object update-key!))
+(defn- build! [definition parent-key]
+  (let [key    (conj parent-key (:impi/key definition))
+        cache! #(swap! cache assoc key %)]
+    (:obj (if-let [cached (@cache key)]
+            (if (= (:def cached) definition)
+              cached
+              (-> cached
+                  (update! key definition)
+                  (doto cache!)))
+            (-> {:def {}, :obj (create definition)}
+                (update! key definition)
+                (doto cache!))))))
 
 (defn render [renderer {:keys [:impi/textures :impi/root]}]
   (js/requestAnimationFrame
    (fn []
-     (run! build-texture! textures)
-     (.render renderer (build-object! root)))))
+     (run! #(build! % [:impi/textures]) textures)
+     (.render renderer (build! root [:impi/root])))))

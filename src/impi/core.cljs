@@ -108,13 +108,6 @@
 
 (declare build-object!)
 
-(defmulti create-texture (comp :pixi.asset/type :pixi.texture/source))
-
-(defmethod create-texture :pixi.asset.type/image [texture]
-  (let [source (-> texture :pixi.texture/source :pixi.asset/uri image)
-        mode   (-> texture :pixi.texture/scale-mode scale-modes)]
-    (js/PIXI.Texture. (js/PIXI.BaseTexture. source mode))))
-
 (defmulti create-object :pixi/type)
 
 (defmethod create-object :pixi.type/sprite [_]
@@ -122,6 +115,11 @@
 
 (defmethod create-object :pixi.type/container [_]
   (js/PIXI.Container.))
+
+(defmethod create-object :pixi.type/texture [texture]
+  (let [source (-> texture :pixi.texture/source image)
+        mode   (-> texture :pixi.texture/scale-mode scale-modes)]
+    (js/PIXI.Texture. (js/PIXI.BaseTexture. source mode))))
 
 (defmulti update-key! (fn [object cache-key key value] key))
 
@@ -162,7 +160,7 @@
   (conj (or parent-key []) (:impi/key definition)))
 
 (def build-texture!
-  (builder texture-cache #(key %2) val create-texture update-key!))
+  (builder texture-cache #(key %2) val create-object update-key!))
 
 (def build-object!
   (builder object-cache object-key identity create-object update-key!))

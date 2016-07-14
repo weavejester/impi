@@ -26,8 +26,8 @@
   (let [update! (updater updatef)]
     (fn build
       ([definition]
-       (build nil definition))
-      ([parent-key definition]
+       (build definition nil))
+      ([definition parent-key]
        (let [key    (keyf parent-key definition)
              value  (valf definition)
              cache! #(swap! cache assoc key %)]
@@ -142,7 +142,7 @@
   object)
 
 (defmethod update-key! :pixi.container/children [container cache-key _ children]
-  (replace-children container (map #(build-object! cache-key %) children))
+  (replace-children container (map #(build-object! % cache-key) children))
   container)
 
 (defmethod update-key! :pixi.sprite/anchor [sprite _ _ [x y]]

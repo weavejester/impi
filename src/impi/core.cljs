@@ -149,7 +149,7 @@
   sprite)
 
 (defmethod update-key! :pixi.sprite/texture [sprite _ _ texture]
-  (set! (.-texture sprite) (:obj (@texture-cache texture)))
+  (set! (.-texture sprite) (:obj (@texture-cache [texture])))
   sprite)
 
 (defmethod update-key! :pixi.texture/scale-mode [texture _ _ mode]
@@ -160,7 +160,7 @@
   (conj (or parent-key []) (:impi/key definition)))
 
 (def build-texture!
-  (builder texture-cache #(key %2) val create-object update-key!))
+  (builder texture-cache object-key identity create-object update-key!))
 
 (def build-object!
   (builder object-cache object-key identity create-object update-key!))

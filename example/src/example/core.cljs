@@ -11,10 +11,10 @@
 
 (reset! state
         {:impi/textures
-         {:bunny
-          {:pixi/type               :pixi.type/texture
+         [{:impi/key  :bunny
+           :pixi/type :pixi.type/texture
            :pixi.texture/scale-mode :pixi.texture.scale-mode/nearest
-           :pixi.texture/source     "img/bunny.png"}}
+           :pixi.texture/source     "img/bunny.png"}]
          :impi/root
          {:impi/key  :stage
           :pixi/type :pixi.type/container

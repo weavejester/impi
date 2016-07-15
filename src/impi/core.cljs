@@ -122,8 +122,8 @@
   (set! (-> sprite .-anchor .-y) y)
   sprite)
 
-(defmethod update-key! :pixi.sprite/texture [sprite _ _ texture]
-  (set! (.-texture sprite) (cached-texture texture))
+(defmethod update-key! :pixi.sprite/texture [sprite cache-key _ texture]
+  (set! (.-texture sprite) (build! texture cache-key))
   sprite)
 
 (defmethod update-key! :pixi.texture/scale-mode [texture _ _ mode]
@@ -138,21 +138,21 @@
            (:obj cached)
            definition))})
 
-(defn- build! [definition parent-key]
-  (let [key    (conj parent-key (:impi/key definition))
-        cache! #(swap! cache assoc key %)]
-    (:obj (if-let [cached (@cache key)]
-            (if (= (:def cached) definition)
-              cached
-              (-> cached
-                  (update! key definition)
-                  (doto cache!)))
-            (-> {:def {}, :obj (create definition)}
-                (update! key definition)
-                (doto cache!))))))
+(defn- build!
+  ([definition]
+   (build! definition []))
+  ([definition parent-key]
+   (let [key    (conj parent-key (:impi/key definition))
+         cache! #(swap! cache assoc key %)]
+     (:obj (if-let [cached (@cache key)]
+             (if (= (:def cached) definition)
+               cached
+               (-> cached
+                   (update! key definition)
+                   (doto cache!)))
+             (-> {:def {}, :obj (create definition)}
+                 (update! key definition)
+                 (doto cache!)))))))
 
-(defn render [renderer {:keys [:impi/textures :impi/root]}]
-  (js/requestAnimationFrame
-   (fn []
-     (run! #(build! % [:impi/textures]) textures)
-     (.render renderer (build! root [:impi/root])))))
+(defn render [renderer scene]
+  (js/requestAnimationFrame #(.render renderer (build! scene))))

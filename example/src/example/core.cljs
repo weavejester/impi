@@ -19,8 +19,7 @@
            :pixi.object/rotation 0.0
            :pixi.sprite/anchor   [0.5 0.5]
            :pixi.sprite/texture
-           {:impi/key  :bunny
-            :pixi/type :pixi.type/texture
+           {:pixi/type :pixi.type/texture
             :pixi.texture/scale-mode :pixi.texture.scale-mode/nearest
             :pixi.texture/source     "img/bunny.png"}}
           {:impi/key  :bunny2
@@ -30,8 +29,7 @@
            :pixi.object/rotation 0.0
            :pixi.sprite/anchor   [0.5 0.5]
            :pixi.sprite/texture
-           {:impi/key  :bunny
-            :pixi/type :pixi.type/texture
+           {:pixi/type :pixi.type/texture
             :pixi.texture/scale-mode :pixi.texture.scale-mode/nearest
             :pixi.texture/source     "img/bunny.png"}}
           {:impi/key  :bunny3
@@ -40,8 +38,7 @@
            :pixi.object/rotation 0.0
            :pixi.sprite/anchor   [0.5 0.5]
            :pixi.sprite/texture
-           {:impi/key  :bunny
-            :pixi/type :pixi.type/texture
+           {:pixi/type :pixi.type/texture
             :pixi.texture/scale-mode :pixi.texture.scale-mode/nearest
             :pixi.texture/source     "img/bunny.png"}}]})
 

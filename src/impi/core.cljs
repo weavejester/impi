@@ -113,8 +113,8 @@
   (set! (-> object .-scale .-y) y)
   object)
 
-(defmethod update-key! :pixi.container/children [container cache-key _ children]
-  (replace-children container (map #(build! % cache-key) children))
+(defmethod update-key! :pixi.container/children [container cache-key key children]
+  (replace-children container (map #(build! % (conj cache-key key)) children))
   container)
 
 (defmethod update-key! :pixi.sprite/anchor [sprite _ _ [x y]]
@@ -123,7 +123,7 @@
   sprite)
 
 (defmethod update-key! :pixi.sprite/texture [sprite cache-key _ texture]
-  (set! (.-texture sprite) (build! texture cache-key))
+  (set! (.-texture sprite) (build! texture (conj cache-key key)))
   sprite)
 
 (defmethod update-key! :pixi.texture/scale-mode [texture _ _ mode]

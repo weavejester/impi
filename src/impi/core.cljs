@@ -75,10 +75,15 @@
   {:pixi.texture.scale-mode/linear  js/PIXI.SCALE_MODES.LINEAR
    :pixi.texture.scale-mode/nearest js/PIXI.SCALE_MODES.NEAREST})
 
-(def cache (atom {}))
+(defn- create-texture* [texture]
+  (let [source (-> texture :pixi.texture/source image)
+        mode   (-> texture :pixi.texture/scale-mode scale-modes)]
+    (js/PIXI.Texture. (js/PIXI.BaseTexture. source mode))))
 
-(defn- cached-texture [key]
-  (:obj (@cache [:impi/textures key])))
+(def create-texture
+  (memoize create-texture*))
+
+(def cache (atom {}))
 
 (declare build!)
 
@@ -89,11 +94,6 @@
 
 (defmethod create :pixi.type/container [_]
   (js/PIXI.Container.))
-
-(defmethod create :pixi.type/texture [texture]
-  (let [source (-> texture :pixi.texture/source image)
-        mode   (-> texture :pixi.texture/scale-mode scale-modes)]
-    (js/PIXI.Texture. (js/PIXI.BaseTexture. source mode))))
 
 (defmulti update-key! (fn [object cache-key key value] key))
 
@@ -123,12 +123,8 @@
   sprite)
 
 (defmethod update-key! :pixi.sprite/texture [sprite cache-key _ texture]
-  (set! (.-texture sprite) (build! texture (conj cache-key key)))
+  (set! (.-texture sprite) (create-texture texture))
   sprite)
-
-(defmethod update-key! :pixi.texture/scale-mode [texture _ _ mode]
-  (set! (.-scaleMode texture) (scale-modes mode))
-  texture)
 
 (defn- update! [cached key definition]
   {:def definition

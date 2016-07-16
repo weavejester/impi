@@ -19,7 +19,9 @@
            :pixi.object/rotation 0.0
            :pixi.sprite/anchor   [0.5 0.5]
            :pixi.sprite/texture
-           {:pixi.texture/scale-mode :pixi.texture.scale-mode/linear
+           {:impi/key  :bunny-linear
+            :pixi/type :pixi.type/texture
+            :pixi.texture/scale-mode :pixi.texture.scale-mode/linear
             :pixi.texture/source     "img/bunny.png"}}
           {:impi/key  :bunny2
            :pixi/type :pixi.type/sprite
@@ -28,7 +30,9 @@
            :pixi.object/rotation 0.0
            :pixi.sprite/anchor   [0.5 0.5]
            :pixi.sprite/texture
-           {:pixi.texture/scale-mode :pixi.texture.scale-mode/nearest
+           {:impi/key  :bunny-nearest
+            :pixi/type :pixi.type/texture
+            :pixi.texture/scale-mode :pixi.texture.scale-mode/nearest
             :pixi.texture/source     "img/bunny.png"}}
           {:impi/key  :bunny3
            :pixi/type :pixi.type/sprite
@@ -36,7 +40,9 @@
            :pixi.object/rotation 0.0
            :pixi.sprite/anchor   [0.5 0.5]
            :pixi.sprite/texture
-           {:pixi.texture/scale-mode :pixi.texture.scale-mode/nearest
+           {:impi/key  :bunny-nearest
+            :pixi/type :pixi.type/texture
+            :pixi.texture/scale-mode :pixi.texture.scale-mode/nearest
             :pixi.texture/source     "img/bunny.png"}}]})
 
 (defn animate [state]

@@ -77,13 +77,8 @@
   {:pixi.texture.scale-mode/linear  js/PIXI.SCALE_MODES.LINEAR
    :pixi.texture.scale-mode/nearest js/PIXI.SCALE_MODES.NEAREST})
 
-(defn- create-texture* [texture]
-  (let [source (-> texture :pixi.texture/source image)
-        mode   (-> texture :pixi.texture/scale-mode scale-modes)]
-    (js/PIXI.Texture. (js/PIXI.BaseTexture. source mode))))
-
-(def create-texture
-  (memoize create-texture*))
+(derive :pixi.type/sprite    :pixi.type/object)
+(derive :pixi.type/container :pixi.type/object)
 
 (declare build!)
 
@@ -94,6 +89,12 @@
 
 (defmethod create :pixi.type/container [_]
   {:def {} :obj (js/PIXI.Container.)})
+
+(defmethod create :pixi.type/texture [texture]
+  (let [source (-> texture :pixi.texture/source image)
+        mode   (-> texture :pixi.texture/scale-mode scale-modes)]
+    {:def texture
+     :obj (js/PIXI.Texture. (js/PIXI.BaseTexture. source mode))}))
 
 (defmulti update-key! (fn [object cache-key key value] key))
 
@@ -113,8 +114,8 @@
   (set! (-> object .-scale .-y) y)
   object)
 
-(defmethod update-key! :pixi.container/children [container cache-key key children]
-  (replace-children container (map #(build! % (conj cache-key key)) children))
+(defmethod update-key! :pixi.container/children [container cache-key _ children]
+  (replace-children container (map #(build! % cache-key) children))
   container)
 
 (defmethod update-key! :pixi.sprite/anchor [sprite _ _ [x y]]
@@ -123,18 +124,24 @@
   sprite)
 
 (defmethod update-key! :pixi.sprite/texture [sprite cache-key _ texture]
-  (set! (.-texture sprite) (create-texture texture))
+  (set! (.-texture sprite) (build! texture cache-key))
   sprite)
 
-(def cache (atom {}))
+(defmulti update!
+  (fn [cached definition key] (:pixi/type definition)))
 
-(defn- update! [cached key definition]
+(defmethod update! :pixi.type/object [cached definition key]
   {:def definition
    :obj (let [old-def (:def cached)]
           (reduce-kv
            (fn [o k v] (if (= v (old-def k)) o (update-key! o key k v)))
            (:obj cached)
            definition))})
+
+(defmethod update! :pixi.type/texture [cached definition key]
+  (create definition))
+
+(def cache (atom {}))
 
 (defn- build!
   ([definition]
@@ -146,10 +153,10 @@
              (if (= (:def cached) definition)
                cached
                (-> cached
-                   (update! key definition)
+                   (update! definition key)
                    (doto cache!)))
              (-> (create definition)
-                 (update! key definition)
+                 (update! definition key)
                  (doto cache!)))))))
 
 (defn render [renderer scene]

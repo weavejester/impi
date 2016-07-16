@@ -4,7 +4,7 @@
 (enable-console-print!)
 
 (defonce renderer
-  (impi/renderer [400 300]))
+  (impi/renderer [400 300] {:background-color 0xbbbbbb}))
 
 (defonce state
   (atom {}))
@@ -24,7 +24,7 @@
           {:impi/key  :bunny2
            :pixi/type :pixi.type/sprite
            :pixi.object/position [100 100]
-           :pixi.object/scale    [10 10]
+           :pixi.object/scale    [5 5]
            :pixi.object/rotation 0.0
            :pixi.sprite/anchor   [0.5 0.5]
            :pixi.sprite/texture
@@ -32,7 +32,7 @@
             :pixi.texture/source     "img/bunny.png"}}
           {:impi/key  :bunny3
            :pixi/type :pixi.type/sprite
-           :pixi.object/position [110 100]
+           :pixi.object/position [150 140]
            :pixi.object/rotation 0.0
            :pixi.sprite/anchor   [0.5 0.5]
            :pixi.sprite/texture

@@ -1,8 +1,10 @@
 (ns impi.core
   (:require cljsjs.pixi))
 
-(defn renderer [[w h]]
-  (js/PIXI.autoDetectRenderer w h))
+(defn renderer [[w h] {:keys [background-color]}]
+  (let [r (js/PIXI.autoDetectRenderer w h)]
+    (set! (.-backgroundColor r) background-color)
+    r))
 
 (defn mounted? [renderer element]
   (and (identical? (.-firstChild element) (.-view renderer))

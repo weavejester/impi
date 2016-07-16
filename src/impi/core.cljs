@@ -85,17 +85,15 @@
 (def create-texture
   (memoize create-texture*))
 
-(def cache (atom {}))
-
 (declare build!)
 
 (defmulti create :pixi/type)
 
 (defmethod create :pixi.type/sprite [_]
-  (js/PIXI.Sprite.))
+  {:def {} :obj (js/PIXI.Sprite.)})
 
 (defmethod create :pixi.type/container [_]
-  (js/PIXI.Container.))
+  {:def {} :obj (js/PIXI.Container.)})
 
 (defmulti update-key! (fn [object cache-key key value] key))
 
@@ -128,6 +126,8 @@
   (set! (.-texture sprite) (create-texture texture))
   sprite)
 
+(def cache (atom {}))
+
 (defn- update! [cached key definition]
   {:def definition
    :obj (let [old-def (:def cached)]
@@ -148,7 +148,7 @@
                (-> cached
                    (update! key definition)
                    (doto cache!)))
-             (-> {:def {}, :obj (create definition)}
+             (-> (create definition)
                  (update! key definition)
                  (doto cache!)))))))
 

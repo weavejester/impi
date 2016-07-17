@@ -1,7 +1,9 @@
 (ns example.core
-  (:require [impi.core :as impi]))
+  (:require [impi.core :as impi]
+            [devtools.core :as devtools]))
 
 (enable-console-print!)
+(devtools/install!)
 
 (defonce renderer
   (impi/renderer [400 300] {:background-color 0xbbbbbb}))

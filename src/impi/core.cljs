@@ -128,16 +128,19 @@
         (build! (assoc texture :impi/key texture, :pixi/type :pixi.type/texture)))
   sprite)
 
-(defmulti update!
-  (fn [cached definition key] (:pixi/type definition)))
-
-(defmethod update! :pixi.type/object [cached definition key]
+(defn- update-changed-keys! [cached definition key]
   {:def definition
    :obj (let [old-def (:def cached)]
           (reduce-kv
            (fn [o k v] (if (= v (old-def k)) o (update-key! o key k v)))
            (:obj cached)
            definition))})
+
+(defmulti update!
+  (fn [cached definition key] (:pixi/type definition)))
+
+(defmethod update! :pixi.type/object [cached definition key]
+  (update-changed-keys! cached definition key))
 
 (defmethod update! :pixi.type/texture [cached definition key]
   (create definition))

@@ -124,7 +124,8 @@
   sprite)
 
 (defmethod update-key! :pixi.sprite/texture [sprite cache-key _ texture]
-  (set! (.-texture sprite) (build! texture cache-key))
+  (set! (.-texture sprite)
+        (build! (assoc texture :impi/key texture, :pixi/type :pixi.type/texture)))
   sprite)
 
 (defmulti update!

@@ -82,86 +82,101 @@
 
 (declare build!)
 
-(defmulti create :pixi/type)
+(defmulti create
+  (fn [definition renderer] (:pixi/type definition)))
 
-(defmethod create :pixi.type/sprite [_]
+(defmethod create :pixi.type/sprite [_ _]
   {:def {} :obj (js/PIXI.Sprite.)})
 
-(defmethod create :pixi.type/container [_]
+(defmethod create :pixi.type/container [_ _]
   {:def {} :obj (js/PIXI.Container.)})
 
-(defmethod create :pixi.type/texture [texture]
+(defmethod create :pixi.type/texture [texture _]
   (let [source (-> texture :pixi.texture/source image)
         mode   (-> texture :pixi.texture/scale-mode scale-modes)]
     {:def texture
      :obj (js/PIXI.Texture. (js/PIXI.BaseTexture. source mode))}))
 
-(defmulti update-key! (fn [object cache-key key value] key))
+(defmethod create :pixi.type/render-texture [texture renderer]
+  (let [source (-> texture :pixi.texture/source (build! renderer))
+        mode   (-> texture :pixi.texture/scale-mode scale-modes)
+        [w h]  (:pixi.texture/size texture)
+        object (.create js/PIXI.RenderTexture w h mode)]
+    (.render renderer source object)
+    {:def texture, :obj object}))
 
-(defmethod update-key! :default [object _ _ _] object)
+(defmulti update-key! (fn [object renderer cache-key key value] key))
 
-(defmethod update-key! :pixi.object/position [object _ _ [x y]]
+(defmethod update-key! :default [object _ _ _ _] object)
+
+(defmethod update-key! :pixi.object/position [object _ _ _ [x y]]
   (set! (-> object .-position .-x) x)
   (set! (-> object .-position .-y) y)
   object)
 
-(defmethod update-key! :pixi.object/rotation [object _ _ angle]
+(defmethod update-key! :pixi.object/rotation [object _ _ _ angle]
   (set! (.-rotation object) angle)
   object)
 
-(defmethod update-key! :pixi.object/scale [object _ _ [x y]]
+(defmethod update-key! :pixi.object/scale [object _ _ _ [x y]]
   (set! (-> object .-scale .-x) x)
   (set! (-> object .-scale .-y) y)
   object)
 
-(defmethod update-key! :pixi.container/children [container cache-key _ children]
-  (replace-children container (map #(build! % cache-key) children))
+(defmethod update-key! :pixi.container/children [container renderer cache-key _ children]
+  (replace-children container (map #(build! % renderer cache-key) children))
   container)
 
-(defmethod update-key! :pixi.sprite/anchor [sprite _ _ [x y]]
+(defmethod update-key! :pixi.sprite/anchor [sprite _ _ _ [x y]]
   (set! (-> sprite .-anchor .-x) x)
   (set! (-> sprite .-anchor .-y) y)
   sprite)
 
-(defmethod update-key! :pixi.sprite/texture [sprite cache-key _ texture]
-  (set! (.-texture sprite)
-        (build! (assoc texture :impi/key texture, :pixi/type :pixi.type/texture)))
-  sprite)
+(defmethod update-key! :pixi.sprite/texture [sprite renderer cache-key _ texture]
+  (let [type (if (map? (:pixi.texture/source texture))
+               :pixi.type/render-texture
+               :pixi.type/texture)]
+    (set! (.-texture sprite)
+          (build! (assoc texture :impi/key texture, :pixi/type type) renderer))
+    sprite))
 
-(defn- update-changed-keys! [cached definition key]
+(defn- update-changed-keys! [cached definition renderer key]
   {:def definition
    :obj (let [old-def (:def cached)]
           (reduce-kv
-           (fn [o k v] (if (= v (old-def k)) o (update-key! o key k v)))
+           (fn [o k v] (if (= v (old-def k)) o (update-key! o renderer key k v)))
            (:obj cached)
            definition))})
 
 (defmulti update!
-  (fn [cached definition key] (:pixi/type definition)))
+  (fn [cached definition renderer key] (:pixi/type definition)))
 
-(defmethod update! :pixi.type/object [cached definition key]
-  (update-changed-keys! cached definition key))
+(defmethod update! :pixi.type/object [cached definition renderer key]
+  (update-changed-keys! cached definition renderer key))
 
-(defmethod update! :pixi.type/texture [cached definition key]
-  (create definition))
+(defmethod update! :pixi.type/texture [cached definition renderer key]
+  (create definition renderer))
+
+(defmethod update! :pixi.type/render-texture [cached definition renderer key]
+  (create definition renderer))
 
 (def cache (atom {}))
 
 (defn- build!
-  ([definition]
-   (build! definition []))
-  ([definition parent-key]
+  ([definition renderer]
+   (build! definition renderer []))
+  ([definition renderer parent-key]
    (let [key    (conj parent-key (:impi/key definition))
          cache! #(swap! cache assoc key %)]
      (:obj (if-let [cached (@cache key)]
              (if (= (:def cached) definition)
                cached
                (-> cached
-                   (update! definition key)
+                   (update! definition renderer key)
                    (doto cache!)))
-             (-> (create definition)
-                 (update! definition key)
+             (-> (create definition renderer)
+                 (update! definition renderer key)
                  (doto cache!)))))))
 
 (defn render [renderer scene]
-  (js/requestAnimationFrame #(.render renderer (build! scene))))
+  (js/requestAnimationFrame #(.render renderer (build! scene renderer))))

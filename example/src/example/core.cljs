@@ -27,19 +27,25 @@
            :pixi/type :pixi.type/sprite
            :pixi.object/position [100 100]
            :pixi.object/scale    [5 5]
-           :pixi.object/rotation 0.0
            :pixi.sprite/anchor   [0.5 0.5]
            :pixi.sprite/texture
            {:pixi.texture/scale-mode :pixi.texture.scale-mode/nearest
             :pixi.texture/source     "img/bunny.png"}}
-          {:impi/key  :bunny3
+          {:impi/key  :rendered
            :pixi/type :pixi.type/sprite
-           :pixi.object/position [150 140]
-           :pixi.object/rotation 0.0
-           :pixi.sprite/anchor   [0.5 0.5]
+           :pixi.object/position [0 0]
+           :pixi.object/scale [3 3]
            :pixi.sprite/texture
            {:pixi.texture/scale-mode :pixi.texture.scale-mode/nearest
-            :pixi.texture/source     "img/bunny.png"}}]})
+            :pixi.texture/size [100 100]
+            :pixi.texture/source
+            {:impi/key  :bunny3
+             :pixi/type :pixi.type/sprite
+             :pixi.object/position [50 50]
+             :pixi.sprite/anchor   [0.5 0.5]
+             :pixi.sprite/texture
+             {:pixi.texture/scale-mode :pixi.texture.scale-mode/nearest
+              :pixi.texture/source     "img/bunny.png"}}}}]})
 
 (defn animate [state]
   (swap! state update-in [:pixi.container/children 0 :pixi.object/rotation] + 0.1)

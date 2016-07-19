@@ -68,6 +68,9 @@
       (run! clear-parent removed)
       (run! #(set-parent % container) (.-children container)))))
 
+(defn- changed-keys [before after]
+  (reduce-kv (fn [ks k v] (if (= v (before k)) ks (conj ks k))) () after))
+
 (defn- image [src]
   (let [image (js/Image.)]
     (set! (.-src image) src)
@@ -107,46 +110,38 @@
 
 (defmulti update-key! (fn [object renderer cache-key key value] key))
 
-(defmethod update-key! :default [object _ _ _ _] object)
+(defmethod update-key! :default [object _ _ _ _])
 
 (defmethod update-key! :pixi.object/position [object _ _ _ [x y]]
   (set! (-> object .-position .-x) x)
-  (set! (-> object .-position .-y) y)
-  object)
+  (set! (-> object .-position .-y) y))
 
 (defmethod update-key! :pixi.object/rotation [object _ _ _ angle]
-  (set! (.-rotation object) angle)
-  object)
+  (set! (.-rotation object) angle))
 
 (defmethod update-key! :pixi.object/scale [object _ _ _ [x y]]
   (set! (-> object .-scale .-x) x)
-  (set! (-> object .-scale .-y) y)
-  object)
+  (set! (-> object .-scale .-y) y))
 
 (defmethod update-key! :pixi.container/children [container renderer cache-key _ children]
-  (replace-children container (map #(build! % renderer cache-key) children))
-  container)
+  (replace-children container (map #(build! % renderer cache-key) children)))
 
 (defmethod update-key! :pixi.sprite/anchor [sprite _ _ _ [x y]]
   (set! (-> sprite .-anchor .-x) x)
-  (set! (-> sprite .-anchor .-y) y)
-  sprite)
+  (set! (-> sprite .-anchor .-y) y))
 
 (defmethod update-key! :pixi.sprite/texture [sprite renderer cache-key _ texture]
   (let [type (if (map? (:pixi.texture/source texture))
                :pixi.type/render-texture
                :pixi.type/texture)]
     (set! (.-texture sprite)
-          (build! (assoc texture :impi/key texture, :pixi/type type) renderer))
-    sprite))
+          (build! (assoc texture :impi/key texture, :pixi/type type) renderer))))
 
 (defn- update-changed-keys! [cached definition renderer key]
-  {:def definition
-   :obj (let [old-def (:def cached)]
-          (reduce-kv
-           (fn [o k v] (if (= v (old-def k)) o (update-key! o renderer key k v)))
-           (:obj cached)
-           definition))})
+  (let [object (:obj cached)]
+    (doseq [k (changed-keys (:def cached) definition)]
+      (update-key! object renderer key k (get definition k)))
+    {:def definition, :obj object}))
 
 (defmulti update!
   (fn [cached definition renderer key] (:pixi/type definition)))

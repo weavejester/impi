@@ -152,16 +152,11 @@
     (.render renderer source texture)
     (on-loaded-textures #(.render renderer source texture))))
 
-(defn- update-properties! [object kvs renderer cache-key]
-  (doseq [[k v] kvs]
-    (update-prop! object k v renderer cache-key)))
-
-(defn- changed-kvs [before after]
-  (filter #(not= (val %) (before (key %))) after))
-
-(defn- update! [{obj :obj old-def :def} new-def renderer key]
-  (update-properties! obj (changed-kvs old-def new-def) renderer key)
-  {:obj obj, :def new-def})
+(defn- update! [{object :obj old-def :def} new-def renderer cache-key]
+  (doseq [[k v] new-def]
+    (when (not= v (old-def k))
+      (update-prop! object k v renderer cache-key)))
+  {:def new-def, :obj object})
 
 (defmulti object-key :pixi/type)
 

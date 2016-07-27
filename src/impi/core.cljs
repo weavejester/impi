@@ -114,7 +114,7 @@
 
 (defmethod create :pixi.type/render-texture [texture renderer]
   (let [mode   (-> texture :pixi.texture/scale-mode scale-modes)
-        [w h]  (:pixi.texture/size texture)
+        [w h]  (:pixi.render-texture/size texture)
         object (.create js/PIXI.RenderTexture w h mode)]
     {:def (dissoc texture :pixi.render-texture/source)
      :obj object}))
@@ -149,11 +149,23 @@
     (.render renderer source texture)
     (on-loaded-textures #(.render renderer source texture))))
 
+(defmethod update-prop! :pixi.render-texture/size [texture _ [w h] _ _]
+  (.resize texture w h true))
+
 (defn- update! [{object :obj old-def :def} new-def renderer cache-key]
   (doseq [[k v] new-def]
     (when (not= v (old-def k))
       (update-prop! object k v renderer cache-key)))
   {:def new-def, :obj object})
+
+(defn- changed-keys? [pred old-def new-def]
+  (reduce-kv
+   (fn [ret k v]
+     (if (and (pred k) (not= v (old-def k)))
+       (reduced true)
+       false))
+   false
+   new-def))
 
 (defmulti should-recreate?
   (fn [old-def new-def] (:pixi/type new-def)))
@@ -165,8 +177,8 @@
   true)
 
 (defmethod should-recreate? :pixi.type/render-texture [old-def new-def]
-  (not= (dissoc old-def :pixi.render-texture/source)
-        (dissoc new-def :pixi.render-texture/source)))
+  (let [update-keys #{:pixi.render-texture/size :pixi.render-texture/source}]
+    (changed-keys? (complement update-keys) old-def new-def)))
 
 (defmulti object-key :pixi/type)
 

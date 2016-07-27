@@ -77,6 +77,21 @@
   {:pixi.texture.scale-mode/linear  js/PIXI.SCALE_MODES.LINEAR
    :pixi.texture.scale-mode/nearest js/PIXI.SCALE_MODES.NEAREST})
 
+(def texture-cache (atom {}))
+
+(defn- create-texture [texture]
+  (let [source (-> texture :pixi.texture/source image)
+        mode   (-> texture :pixi.texture/scale-mode scale-modes)
+        base   (js/PIXI.BaseTexture. source mode)]
+    {:def texture
+     :obj (js/PIXI.Texture. base)}))
+
+(defn- create-or-fetch-texture [texture]
+  (or (@texture-cache texture)
+      (let [object (create-texture texture)]
+        (swap! texture-cache assoc texture object)
+        object)))
+
 (declare build!)
 
 (defn- render-texture [renderer object definition]
@@ -96,10 +111,7 @@
   {:def {} :obj (js/PIXI.Container.)})
 
 (defmethod create :pixi.type/texture [texture _]
-  (let [source (-> texture :pixi.texture/source image)
-        mode   (-> texture :pixi.texture/scale-mode scale-modes)]
-    {:def texture
-     :obj (js/PIXI.Texture. (js/PIXI.BaseTexture. source mode))}))
+  (create-or-fetch-texture texture))
 
 (defmethod create :pixi.type/render-texture [texture renderer]
   (let [mode   (-> texture :pixi.texture/scale-mode scale-modes)
@@ -162,15 +174,15 @@
       (do (render-texture renderer obj new-def) cached)
       (create new-def renderer))))
 
-(def cache (atom {}))
+(def object-cache (atom {}))
 
 (defn- build!
   ([definition renderer]
    (build! definition renderer []))
   ([definition renderer parent-key]
    (let [key    (conj parent-key (:impi/key definition))
-         cache! #(swap! cache assoc key %)]
-     (:obj (if-let [cached (@cache key)]
+         cache! #(swap! object-cache assoc key %)]
+     (:obj (if-let [cached (@object-cache key)]
              (if (= (:def cached) definition)
                cached
                (-> cached

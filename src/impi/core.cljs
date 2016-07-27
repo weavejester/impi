@@ -151,11 +151,7 @@
   (set! (-> sprite .-anchor .-y) y))
 
 (defmethod update-prop! :pixi.sprite/texture [sprite _ texture renderer cache-key]
-  (let [type (if (map? (:pixi.texture/source texture))
-               :pixi.type/render-texture
-               :pixi.type/texture)]
-    (set! (.-texture sprite)
-          (build! (assoc texture :impi/key texture, :pixi/type type) renderer))))
+  (set! (.-texture sprite) (build! texture renderer cache-key)))
 
 (defn- update-properties! [object kvs renderer cache-key]
   (doseq [[k v] kvs]
@@ -181,13 +177,21 @@
       (do (render-texture renderer obj new-def) cached)
       (create new-def renderer))))
 
+(defmulti object-key :pixi/type)
+
+(defmethod object-key :default [definition]
+  (:impi/key definition))
+
+(defmethod object-key :pixi.type/texture [_]
+  :pixi.sprite/texture)
+
 (def object-cache (atom {}))
 
 (defn- build!
   ([definition renderer]
    (build! definition renderer []))
   ([definition renderer parent-key]
-   (let [key    (conj parent-key (:impi/key definition))
+   (let [key    (conj parent-key (object-key definition))
          cache! #(swap! object-cache assoc key %)]
      (:obj (if-let [cached (@object-cache key)]
              (if (= (:def cached) definition)

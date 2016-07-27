@@ -77,26 +77,33 @@
   {:pixi.texture.scale-mode/linear  js/PIXI.SCALE_MODES.LINEAR
    :pixi.texture.scale-mode/nearest js/PIXI.SCALE_MODES.NEAREST})
 
-(def texture-cache (atom {}))
+(def texture-cache    (atom {}))
+(def pending-textures (atom #{}))
 
 (defn- create-texture [texture]
   (let [source (-> texture :pixi.texture/source image)
-        mode   (-> texture :pixi.texture/scale-mode scale-modes)
-        base   (js/PIXI.BaseTexture. source mode)]
-    {:def texture
-     :obj (js/PIXI.Texture. base)}))
+        mode   (-> texture :pixi.texture/scale-mode scale-modes)]
+    (js/PIXI.Texture. (js/PIXI.BaseTexture. source mode))))
 
 (defn- create-or-fetch-texture [texture]
   (or (@texture-cache texture)
-      (let [object (create-texture texture)]
+      (let [object (create-texture texture)
+            base   (.-baseTexture object)]
         (swap! texture-cache assoc texture object)
+        (swap! pending-textures conj base)
+        (.on base "loaded" #(swap! pending-textures disj base))
         object)))
+
+(defn- on-loaded-textures [f]
+  (doseq [texture @pending-textures]
+    (.on texture "loaded" f)))
 
 (declare build!)
 
 (defn- render-texture [renderer object definition]
   (let [source (build! (:pixi.texture/source definition) renderer)]
-    (.render renderer source object)))
+    (.render renderer source object)
+    (on-loaded-textures #(.render renderer source object))))
 
 (derive :pixi.type/sprite    :pixi.type/object)
 (derive :pixi.type/container :pixi.type/object)
@@ -105,13 +112,13 @@
   (fn [definition renderer] (:pixi/type definition)))
 
 (defmethod create :pixi.type/sprite [_ _]
-  {:def {} :obj (js/PIXI.Sprite.)})
+  {:def {}, :obj (js/PIXI.Sprite.)})
 
 (defmethod create :pixi.type/container [_ _]
-  {:def {} :obj (js/PIXI.Container.)})
+  {:def {}, :obj (js/PIXI.Container.)})
 
 (defmethod create :pixi.type/texture [texture _]
-  (create-or-fetch-texture texture))
+  {:def texture, :obj (create-or-fetch-texture texture)})
 
 (defmethod create :pixi.type/render-texture [texture renderer]
   (let [mode   (-> texture :pixi.texture/scale-mode scale-modes)
@@ -193,4 +200,7 @@
                  (doto cache!)))))))
 
 (defn render [renderer scene]
-  (js/requestAnimationFrame #(.render renderer (build! scene renderer))))
+  (let [scene-object (build! scene renderer)
+        render-frame (fn [] (js/requestAnimationFrame #(.render renderer scene-object)))]
+    (render-frame)
+    (on-loaded-textures render-frame)))

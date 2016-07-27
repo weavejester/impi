@@ -100,9 +100,6 @@
 
 (declare build!)
 
-(derive :pixi.type/sprite    :pixi.type/object)
-(derive :pixi.type/container :pixi.type/object)
-
 (defmulti create
   (fn [definition renderer] (:pixi/type definition)))
 

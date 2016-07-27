@@ -155,6 +155,19 @@
       (update-prop! object k v renderer cache-key)))
   {:def new-def, :obj object})
 
+(defmulti should-recreate?
+  (fn [old-def new-def] (:pixi/type new-def)))
+
+(defmethod should-recreate? :default [old-def new-def]
+  (not= (:pixi/type old-def) (:pixi/type new-def)))
+
+(defmethod should-recreate? :pixi.type/texture [old-def new-def]
+  true)
+
+(defmethod should-recreate? :pixi.type/render-texture [old-def new-def]
+  (not= (dissoc old-def :pixi.render-texture/source)
+        (dissoc new-def :pixi.render-texture/source)))
+
 (defmulti object-key :pixi/type)
 
 (defmethod object-key :default [definition]
@@ -172,11 +185,14 @@
    (let [key    (conj parent-key (object-key definition))
          cache! #(swap! object-cache assoc key %)]
      (:obj (if-let [cached (@object-cache key)]
-             (if (= (:def cached) definition)
-               cached
-               (-> cached
-                   (update! definition renderer key)
-                   (doto cache!)))
+             (let [cached-def (:def cached)]
+               (if (= cached-def definition)
+                 cached
+                 (-> (if (should-recreate? cached-def definition)
+                       (create definition renderer)
+                       cached)
+                     (update! definition renderer key)
+                     (doto cache!))))
              (-> (create definition renderer)
                  (update! definition renderer key)
                  (doto cache!)))))))

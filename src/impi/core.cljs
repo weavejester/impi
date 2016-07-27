@@ -100,11 +100,6 @@
 
 (declare build!)
 
-(defn- render-texture [renderer object definition]
-  (let [source (build! (:pixi.texture/source definition) renderer)]
-    (.render renderer source object)
-    (on-loaded-textures #(.render renderer source object))))
-
 (derive :pixi.type/sprite    :pixi.type/object)
 (derive :pixi.type/container :pixi.type/object)
 
@@ -124,8 +119,7 @@
   (let [mode   (-> texture :pixi.texture/scale-mode scale-modes)
         [w h]  (:pixi.texture/size texture)
         object (.create js/PIXI.RenderTexture w h mode)]
-    (render-texture renderer object texture)
-    {:def (dissoc texture :pixi.texture/source)
+    {:def (dissoc texture :pixi.render-texture/source)
      :obj object}))
 
 (defmulti update-prop! (fn [object key value renderer cache-key] key))
@@ -153,6 +147,11 @@
 (defmethod update-prop! :pixi.sprite/texture [sprite _ texture renderer cache-key]
   (set! (.-texture sprite) (build! texture renderer cache-key)))
 
+(defmethod update-prop! :pixi.render-texture/source [texture _ scene renderer cache-key]
+  (let [source (build! scene renderer)]
+    (.render renderer source texture)
+    (on-loaded-textures #(.render renderer source texture))))
+
 (defn- update-properties! [object kvs renderer cache-key]
   (doseq [[k v] kvs]
     (update-prop! object k v renderer cache-key)))
@@ -160,22 +159,9 @@
 (defn- changed-kvs [before after]
   (filter #(not= (val %) (before (key %))) after))
 
-(defmulti update!
-  (fn [cached definition renderer key] (:pixi/type definition)))
-
-(defmethod update! :pixi.type/object [{obj :obj old-def :def} new-def renderer key]
+(defn- update! [{obj :obj old-def :def} new-def renderer key]
   (update-properties! obj (changed-kvs old-def new-def) renderer key)
   {:obj obj, :def new-def})
-
-(defmethod update! :pixi.type/texture [_ definition renderer _]
-  (create definition renderer))
-
-(defmethod update! :pixi.type/render-texture
-  [{obj :obj old-def :def :as cached} new-def renderer key]
-  (let [changed (changed-kvs old-def new-def)]
-    (if (= (keys changed) [:pixi.texture/source])
-      (do (render-texture renderer obj new-def) cached)
-      (create new-def renderer))))
 
 (defmulti object-key :pixi/type)
 

@@ -41,7 +41,7 @@
            {:pixi/type               :pixi.type/render-texture
             :pixi.texture/scale-mode :pixi.texture.scale-mode/nearest
             :pixi.texture/size [100 100]
-            :pixi.texture/source
+            :pixi.render-texture/source
             {:impi/key  :bunny3
              :pixi/type :pixi.type/sprite
              :pixi.object/position [50 50]

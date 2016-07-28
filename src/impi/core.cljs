@@ -68,6 +68,9 @@
       (run! clear-parent removed)
       (run! #(set-parent % container) (.-children container)))))
 
+(defn- rectangle [[x y w h]]
+  (js/PIXI.Rectangle. x y w h))
+
 (defn- image [src]
   (let [image (js/Image.)]
     (set! (.-src image) src)
@@ -105,7 +108,9 @@
 (def texture-cache (atom {}))
 
 (defn- create-texture [texture]
-  (js/PIXI.Texture. (get-base-texture texture)))
+  (js/PIXI.Texture.
+   (get-base-texture texture)
+   (some-> texture :pixi.texture/frame rectangle)))
 
 (defn- get-texture [texture]
   (or (@texture-cache texture)

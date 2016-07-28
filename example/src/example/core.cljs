@@ -61,7 +61,7 @@
            {:pixi/type               :pixi.type/texture
             :pixi.texture/scale-mode :pixi.texture.scale-mode/nearest
             :pixi.texture/source     "img/bunny.png"
-            :pixi.texture/frame      [0 0 20 20]}}
+            :pixi.texture/trim       [0 0 10 10]}}
           {:impi/key  :rendered
            :pixi/type :pixi.type/sprite
            :pixi.object/position [0 0]

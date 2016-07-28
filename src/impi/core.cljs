@@ -98,6 +98,12 @@
   (doseq [texture @pending-textures]
     (.on texture "loaded" f)))
 
+(defn- create-filter [filter]
+  (js/PIXI.Filter.
+   (:pixi.filter/vertex filter)
+   (:pixi.filter/fragment filter)
+   (clj->js (:pixi.filter/uniforms filter))))
+
 (declare build!)
 
 (defmulti create
@@ -133,6 +139,9 @@
 (defmethod update-prop! :pixi.object/scale [object _ [x y] _ _]
   (set! (-> object .-scale .-x) x)
   (set! (-> object .-scale .-y) y))
+
+(defmethod update-prop! :pixi.object/filters [object _ filters _ _]
+  (set! (.-filters object) (apply array (map create-filter filters))))
 
 (defmethod update-prop! :pixi.container/children [container _ children renderer cache-key]
   (replace-children container (map #(build! % renderer cache-key) children)))

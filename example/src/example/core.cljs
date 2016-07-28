@@ -11,6 +11,34 @@
 (defonce state
   (atom {}))
 
+(def outline-shader
+  "precision mediump float;
+
+   varying vec2 vTextureCoord;
+   uniform sampler2D uSampler;
+   uniform vec2 dimensions;
+
+   void main(void) {
+       vec2 pixelSize  = vec2(4.0) / dimensions;
+       vec4 pixel      = texture2D(uSampler, vTextureCoord);
+       vec4 pixelUp    = texture2D(uSampler, vTextureCoord - vec2(0.0, pixelSize.y));
+       vec4 pixelDown  = texture2D(uSampler, vTextureCoord + vec2(0.0, pixelSize.y));
+       vec4 pixelLeft  = texture2D(uSampler, vTextureCoord - vec2(pixelSize.x, 0.0));
+       vec4 pixelRight = texture2D(uSampler, vTextureCoord + vec2(pixelSize.x, 0.0));
+
+       if (pixel.a == 0.0 && (pixelUp.a    > 0.0 ||
+                              pixelDown.a  > 0.0 ||
+                              pixelLeft.a  > 0.0 ||
+                              pixelRight.a > 0.0)) {
+           pixel = vec4(1.0, 0.0, 0.0, 1.0);
+       }
+       else {
+           pixel = vec4(0.0, 0.0, 0.0, 0.0);
+       }
+
+       gl_FragColor = pixel;
+   }")
+
 (reset! state
         {:impi/key  :stage
          :pixi/type :pixi.type/container
@@ -49,7 +77,10 @@
              :pixi.sprite/texture
              {:pixi/type               :pixi.type/texture
               :pixi.texture/scale-mode :pixi.texture.scale-mode/nearest
-              :pixi.texture/source     "img/bunny.png"}}}}]})
+              :pixi.texture/source     "img/bunny.png"}
+             :pixi.object/filters
+             [{:pixi.filter/fragment outline-shader
+               :pixi.filter/uniforms {:dimensions {:type "2f" :value [400.0 300.0]}}}]}}}]})
 
 (defn animate [state]
   (swap! state update-in [:pixi.container/children 0 :pixi.object/rotation] + 0.1)

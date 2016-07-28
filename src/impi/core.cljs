@@ -77,26 +77,41 @@
   {:pixi.texture.scale-mode/linear  js/PIXI.SCALE_MODES.LINEAR
    :pixi.texture.scale-mode/nearest js/PIXI.SCALE_MODES.NEAREST})
 
-(def texture-cache    (atom {}))
-(def pending-textures (atom #{}))
+(def base-texture-cache    (atom {}))
+(def pending-base-textures (atom #{}))
 
-(defn- create-texture [texture]
+(defn- base-texture-key [texture]
+  [(:pixi.texture/source texture)
+   (:pixi.texture/scale-mode texture)])
+
+(defn- create-base-texture [texture]
   (let [source (-> texture :pixi.texture/source image)
         mode   (-> texture :pixi.texture/scale-mode scale-modes)]
-    (js/PIXI.Texture. (js/PIXI.BaseTexture. source mode))))
+    (js/PIXI.BaseTexture. source mode)))
 
-(defn- create-or-fetch-texture [texture]
-  (or (@texture-cache texture)
-      (let [object (create-texture texture)
-            base   (.-baseTexture object)]
-        (swap! texture-cache assoc texture object)
-        (swap! pending-textures conj base)
-        (.on base "loaded" #(swap! pending-textures disj base))
-        object)))
+(defn- get-base-texture [texture]
+  (let [key (base-texture-key texture)]
+    (or (@base-texture-cache key)
+        (let [object (create-base-texture texture)]
+          (swap! base-texture-cache assoc key object)
+          (swap! pending-base-textures conj object)
+          (.on object "loaded" #(swap! pending-base-textures disj object))
+          object))))
 
 (defn- on-loaded-textures [f]
-  (doseq [texture @pending-textures]
+  (doseq [texture @pending-base-textures]
     (.on texture "loaded" f)))
+
+(def texture-cache (atom {}))
+
+(defn- create-texture [texture]
+  (js/PIXI.Texture. (get-base-texture texture)))
+
+(defn- get-texture [texture]
+  (or (@texture-cache texture)
+      (let [object (create-texture texture)]
+        (swap! texture-cache assoc texture object)
+        object)))
 
 (defn- create-filter [filter]
   (js/PIXI.Filter.
@@ -116,7 +131,7 @@
   {:def {}, :obj (js/PIXI.Container.)})
 
 (defmethod create :pixi.type/texture [texture _]
-  {:def texture, :obj (create-or-fetch-texture texture)})
+  {:def texture, :obj (get-texture texture)})
 
 (defmethod create :pixi.type/render-texture [texture renderer]
   (let [mode   (-> texture :pixi.texture/scale-mode scale-modes)

@@ -152,6 +152,9 @@
 
 (defmethod update-prop! :default [object _ _ _ _])
 
+(defmethod update-prop! :pixi.object/alpha [object _ alpha _ _]
+  (set! (.-alpha object) alpha))
+
 (defmethod update-prop! :pixi.object/position [object _ [x y] _ _]
   (set! (-> object .-position .-x) x)
   (set! (-> object .-position .-y) y))

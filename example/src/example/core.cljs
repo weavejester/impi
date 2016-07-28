@@ -65,6 +65,7 @@
            :pixi/type :pixi.type/sprite
            :pixi.object/position [0 0]
            :pixi.object/scale [3 3]
+           :pixi.object/alpha 0.8
            :pixi.sprite/texture
            {:pixi/type               :pixi.type/render-texture
             :pixi.texture/scale-mode :pixi.texture.scale-mode/nearest

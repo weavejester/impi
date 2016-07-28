@@ -112,7 +112,8 @@
    (get-base-texture texture)
    (some-> texture :pixi.texture/frame rectangle)
    (some-> texture :pixi.texture/crop rectangle)
-   (some-> texture :pixi.texture/trim rectangle)))
+   (some-> texture :pixi.texture/trim rectangle)
+   (some-> texture :pixi.texture/rotate?)))
 
 (defn- get-texture [texture]
   (or (@texture-cache texture)

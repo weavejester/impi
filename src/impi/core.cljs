@@ -194,14 +194,20 @@
   (reduce-kv (fn [_ k v] (proc k v) nil) nil m)
   nil)
 
-(defn- update! [{object :obj old-def :def} new-def renderer cache-key]
-  (run-kv!
-   (fn [k v] (if-not (= v (old-def k)) (update-prop! object k v renderer cache-key)))
-   new-def)
+(defn- update-changed-prop! [object old-def k v renderer cache-key]
+  (when-not (= v (old-def k)) (update-prop! object k v renderer cache-key)))
+
+(defn- update-removed-prop! [object new-def k renderer cache-key]
+  (when-not (contains? new-def k) (update-prop! object k nil renderer cache-key)))
+
+(defn- update! [{object :obj old-def :def} new-def renderer key]
+  (run-kv! (fn [k v] (update-changed-prop! object old-def k v renderer key)) new-def)
+  (run-kv! (fn [k _] (update-removed-prop! object new-def k renderer key)) old-def)
   {:def new-def, :obj object})
 
 (defn- changed-keys? [pred old-def new-def]
-  (some-kv (fn [k v] (and (pred k) (not= v (old-def k)))) new-def))
+  (or (some-kv (fn [k v] (and (pred k) (not= v (old-def k)))) new-def)
+      (some-kv (fn [k v] (and (pred k) (not (contains? new-def k)))) old-def)))
 
 (defmulti should-recreate?
   (fn [old-def new-def] (:pixi/type new-def)))

@@ -167,7 +167,7 @@
   (set! (-> object .-scale .-y) (or y 1)))
 
 (defmethod update-prop! :pixi.object/filters [object _ filters _ _]
-  (set! (.-filters object) (apply array (map create-filter filters))))
+  (set! (.-filters object) (some->> filters (map create-filter) (apply array))))
 
 (defmethod update-prop! :pixi.container/children [container _ children renderer cache-key]
   (replace-children container (map #(build! % renderer cache-key) children)))

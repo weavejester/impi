@@ -187,20 +187,21 @@
 (defmethod update-prop! :pixi.render-texture/size [texture _ [w h] _ _]
   (.resize texture w h true))
 
+(defn- some-kv [pred m]
+  (reduce-kv (fn [r k v] (if-let [x (pred k v)] (reduced x) r)) false m))
+
+(defn- run-kv! [proc m]
+  (reduce-kv (fn [_ k v] (proc k v) nil) nil m)
+  nil)
+
 (defn- update! [{object :obj old-def :def} new-def renderer cache-key]
-  (doseq [[k v] new-def]
-    (when (not= v (old-def k))
-      (update-prop! object k v renderer cache-key)))
+  (run-kv!
+   (fn [k v] (if-not (= v (old-def k)) (update-prop! object k v renderer cache-key)))
+   new-def)
   {:def new-def, :obj object})
 
 (defn- changed-keys? [pred old-def new-def]
-  (reduce-kv
-   (fn [ret k v]
-     (if (and (pred k) (not= v (old-def k)))
-       (reduced true)
-       false))
-   false
-   new-def))
+  (some-kv (fn [k v] (and (pred k) (not= v (old-def k)))) new-def))
 
 (defmulti should-recreate?
   (fn [old-def new-def] (:pixi/type new-def)))

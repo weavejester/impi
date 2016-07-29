@@ -169,6 +169,14 @@
 (defmethod update-prop! :pixi.object/filters [object _ filters _ _]
   (set! (.-filters object) (some->> filters (map create-filter) (apply array))))
 
+(defmethod update-prop! :pixi.object/interactive? [object _ interactive? _ _]
+  (set! (.-interactive object) interactive?))
+
+(defmethod update-prop! :pixi.event/mouse-down [object _ handler _ _]
+  (doto object
+    (.removeAllListeners "mousedown")
+    (.on "mousedown" handler)))
+
 (defmethod update-prop! :pixi.container/children [container _ children renderer cache-key]
   (replace-children container (map #(build! % renderer cache-key) children)))
 

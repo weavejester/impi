@@ -56,6 +56,8 @@
            :pixi/type :pixi.type/sprite
            :pixi.object/position [100 100]
            :pixi.object/scale    [5 5]
+           :pixi.object/interactive? true
+           :pixi.event/mouse-down    #(prn :clicked)
            :pixi.sprite/anchor   [0.5 0.5]
            :pixi.sprite/texture
            {:pixi/type               :pixi.type/texture

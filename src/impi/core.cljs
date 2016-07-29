@@ -163,8 +163,8 @@
   (set! (.-rotation object) angle))
 
 (defmethod update-prop! :pixi.object/scale [object _ [x y] _ _]
-  (set! (-> object .-scale .-x) x)
-  (set! (-> object .-scale .-y) y))
+  (set! (-> object .-scale .-x) (or x 1))
+  (set! (-> object .-scale .-y) (or y 1)))
 
 (defmethod update-prop! :pixi.object/filters [object _ filters _ _]
   (set! (.-filters object) (apply array (map create-filter filters))))

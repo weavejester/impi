@@ -183,6 +183,12 @@
 (defmethod update-prop! :pixi.event/mouse-up [object _ listener _ _]
   (replace-listener object "mouseup" listener))
 
+(defmethod update-prop! :pixi.event/mouse-over [object _ listener _ _]
+  (replace-listener object "mouseover" listener))
+
+(defmethod update-prop! :pixi.event/mouse-out [object _ listener _ _]
+  (replace-listener object "mouseout" listener))
+
 (defmethod update-prop! :pixi.container/children [container _ children renderer cache-key]
   (replace-children container (map #(build! % renderer cache-key) children)))
 

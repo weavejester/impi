@@ -59,6 +59,8 @@
            :pixi.object/interactive? true
            :pixi.event/mouse-down    (fn [_] (prn :mouse-down))
            :pixi.event/mouse-up      (fn [_] (prn :mouse-up))
+           :pixi.event/mouse-over    (fn [_] (prn :mouse-over))
+           :pixi.event/mouse-out     (fn [_] (prn :mouse-out))
            :pixi.sprite/anchor       [0.5 0.5]
            :pixi.sprite/texture
            {:pixi/type               :pixi.type/texture

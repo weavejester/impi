@@ -54,11 +54,12 @@
             :pixi.texture/source     "img/bunny.png"}}
           {:impi/key  :bunny2
            :pixi/type :pixi.type/sprite
-           :pixi.object/position [100 100]
-           :pixi.object/scale    [5 5]
+           :pixi.object/position     [100 100]
+           :pixi.object/scale        [5 5]
            :pixi.object/interactive? true
-           :pixi.event/mouse-down    #(prn :clicked)
-           :pixi.sprite/anchor   [0.5 0.5]
+           :pixi.event/mouse-down    (fn [_] (prn :mouse-down))
+           :pixi.event/mouse-up      (fn [_] (prn :mouse-up))
+           :pixi.sprite/anchor       [0.5 0.5]
            :pixi.sprite/texture
            {:pixi/type               :pixi.type/texture
             :pixi.texture/scale-mode :pixi.texture.scale-mode/nearest

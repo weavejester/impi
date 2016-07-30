@@ -68,6 +68,11 @@
       (run! clear-parent removed)
       (run! #(set-parent % container) (.-children container)))))
 
+(defn- replace-listener [object event listener]
+  (doto object
+    (.removeAllListeners event)
+    (.on event listener)))
+
 (defn- rectangle [[x y w h]]
   (js/PIXI.Rectangle. x y w h))
 
@@ -172,10 +177,11 @@
 (defmethod update-prop! :pixi.object/interactive? [object _ interactive? _ _]
   (set! (.-interactive object) interactive?))
 
-(defmethod update-prop! :pixi.event/mouse-down [object _ handler _ _]
-  (doto object
-    (.removeAllListeners "mousedown")
-    (.on "mousedown" handler)))
+(defmethod update-prop! :pixi.event/mouse-down [object _ listener _ _]
+  (replace-listener object "mousedown" listener))
+
+(defmethod update-prop! :pixi.event/mouse-up [object _ listener _ _]
+  (replace-listener object "mouseup" listener))
 
 (defmethod update-prop! :pixi.container/children [container _ children renderer cache-key]
   (replace-children container (map #(build! % renderer cache-key) children)))

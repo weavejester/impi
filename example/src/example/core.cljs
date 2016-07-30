@@ -57,6 +57,7 @@
            :pixi.object/position     [100 100]
            :pixi.object/scale        [5 5]
            :pixi.object/interactive? true
+           :pixi.event/click         (fn [_] (prn :click))
            :pixi.event/mouse-down    (fn [_] (prn :mouse-down))
            :pixi.event/mouse-up      (fn [_] (prn :mouse-up))
            :pixi.event/mouse-over    (fn [_] (prn :mouse-over))

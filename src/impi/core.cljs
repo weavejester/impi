@@ -177,6 +177,9 @@
 (defmethod update-prop! :pixi.object/interactive? [object _ interactive? _ _]
   (set! (.-interactive object) interactive?))
 
+(defmethod update-prop! :pixi.event/click [object _ listener _ _]
+  (replace-listener object "click" listener))
+
 (defmethod update-prop! :pixi.event/mouse-down [object _ listener _ _]
   (replace-listener object "mousedown" listener))
 

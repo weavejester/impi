@@ -6,6 +6,8 @@ Impi is **Im**utable **Pi**xi. It's a ClojureScript library for using
 This library is **experimental**. Experimental means the API is
 unstable, and may change significantly.
 
+[pixi.js]: http://www.pixijs.com/
+
 
 ## Installation
 

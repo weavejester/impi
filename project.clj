@@ -1,6 +1,6 @@
 (defproject impi "0.1.0-SNAPSHOT"
-  :description "FIXME: write description"
-  :url "http://example.com/FIXME"
+  :description "ClojureScript library for using Pixi.js through immutable data"
+  :url "https://github.com/weavejester/impi"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.7.0"]

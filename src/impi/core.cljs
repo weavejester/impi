@@ -15,6 +15,11 @@
     (set! (.-innerHTML element) "")
     (.appendChild element (.-view renderer))))
 
+(defn unmount [renderer]
+  (let [view (.-view renderer)]
+    (when-let [parent (.-parentNode view)]
+      (.removeChild parent view))))
+
 (defn- update-count [child f]
   (set! (.-impiCount child) (f (.-impiCount child))))
 

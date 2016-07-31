@@ -13,7 +13,7 @@ unstable, and may change significantly.
 
 To install, add the following to your project `:dependencies`:
 
-    [impi "0.1.0-SNAPSHOT"]
+    [impi "0.0.1"]
 
 
 ## Usage

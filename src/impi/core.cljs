@@ -158,7 +158,7 @@
     {:def (dissoc texture :pixi.render-texture/source)
      :obj object}))
 
-(defmulti update-prop! (fn [object key value renderer cache-key] key))
+(defmulti update-prop! (fn [object key value renderer index] key))
 
 (defmethod update-prop! :default [object _ _ _ _])
 
@@ -197,18 +197,18 @@
 (defmethod update-prop! :pixi.event/mouse-out [object _ listener _ _]
   (replace-listener object "mouseout" listener))
 
-(defmethod update-prop! :pixi.container/children [container _ children renderer cache-key]
-  (replace-children container (map #(build! % renderer cache-key) children)))
+(defmethod update-prop! :pixi.container/children [container _ children renderer index]
+  (replace-children container (map #(build! index % renderer) children)))
 
 (defmethod update-prop! :pixi.sprite/anchor [sprite _ [x y] _ _]
   (set! (-> sprite .-anchor .-x) x)
   (set! (-> sprite .-anchor .-y) y))
 
-(defmethod update-prop! :pixi.sprite/texture [sprite _ texture renderer cache-key]
-  (set! (.-texture sprite) (build! texture renderer cache-key)))
+(defmethod update-prop! :pixi.sprite/texture [sprite _ texture renderer index]
+  (set! (.-texture sprite) (build! index texture renderer)))
 
-(defmethod update-prop! :pixi.render-texture/source [texture _ scene renderer cache-key]
-  (let [source (build! scene renderer)]
+(defmethod update-prop! :pixi.render-texture/source [texture _ scene renderer index]
+  (let [source (build! index scene renderer)]
     (.render renderer source texture)
     (on-loaded-textures #(.render renderer source texture))))
 
@@ -260,27 +260,24 @@
 
 (def object-cache (atom {}))
 
-(defn- build!
-  ([definition renderer]
-   (build! definition renderer []))
-  ([definition renderer parent-key]
-   (let [key    (conj parent-key (object-key definition))
-         cache! #(swap! object-cache assoc key %)]
-     (:obj (if-let [cached (@object-cache key)]
-             (let [cached-def (:def cached)]
-               (if (= cached-def definition)
-                 cached
-                 (-> (if (should-recreate? cached-def definition)
-                       (create definition renderer)
-                       cached)
-                     (update! definition renderer key)
-                     (doto cache!))))
-             (-> (create definition renderer)
-                 (update! definition renderer key)
-                 (doto cache!)))))))
+(defn- build! [index definition renderer]
+  (let [index  (conj index (object-key definition))
+        cache! #(swap! object-cache assoc index %)]
+    (:obj (if-let [cached (@object-cache index)]
+            (let [cached-def (:def cached)]
+              (if (= cached-def definition)
+                cached
+                (-> (if (should-recreate? cached-def definition)
+                      (create definition renderer)
+                      cached)
+                    (update! definition renderer index)
+                    (doto cache!))))
+            (-> (create definition renderer)
+                (update! definition renderer index)
+                (doto cache!))))))
 
 (defn render [renderer scene]
-  (let [scene-object (build! scene renderer)
+  (let [scene-object (build! [] scene renderer)
         render-frame (fn [] (js/requestAnimationFrame #(.render renderer scene-object)))]
     (render-frame)
     (on-loaded-textures render-frame)))

@@ -139,80 +139,82 @@
 
 (declare build!)
 
-(defmulti create
-  (fn [definition renderer] (:pixi/type definition)))
+(declare ^:dynamic *renderer*)
 
-(defmethod create :pixi.type/sprite [_ _]
+(defmulti create :pixi/type)
+
+(defmethod create :pixi.type/sprite [_]
   {:def {}, :obj (js/PIXI.Sprite.)})
 
-(defmethod create :pixi.type/container [_ _]
+(defmethod create :pixi.type/container [_]
   {:def {}, :obj (js/PIXI.Container.)})
 
-(defmethod create :pixi.type/texture [texture _]
+(defmethod create :pixi.type/texture [texture]
   {:def texture, :obj (get-texture texture)})
 
-(defmethod create :pixi.type/render-texture [texture renderer]
+(defmethod create :pixi.type/render-texture [texture]
   (let [mode   (-> texture :pixi.texture/scale-mode scale-modes)
         [w h]  (:pixi.render-texture/size texture)
         object (.create js/PIXI.RenderTexture w h mode)]
     {:def (dissoc texture :pixi.render-texture/source)
      :obj object}))
 
-(defmulti update-prop! (fn [object key value renderer index] key))
+(defmulti update-prop! (fn [object key value index] key))
 
-(defmethod update-prop! :default [object _ _ _ _])
+(defmethod update-prop! :default [object _ _ _])
 
-(defmethod update-prop! :pixi.object/alpha [object _ alpha _ _]
+(defmethod update-prop! :pixi.object/alpha [object _ alpha _]
   (set! (.-alpha object) (or alpha 1.0)))
 
-(defmethod update-prop! :pixi.object/position [object _ [x y] _ _]
+(defmethod update-prop! :pixi.object/position [object _ [x y] _]
   (set! (-> object .-position .-x) x)
   (set! (-> object .-position .-y) y))
 
-(defmethod update-prop! :pixi.object/rotation [object _ angle _ _]
+(defmethod update-prop! :pixi.object/rotation [object _ angle _]
   (set! (.-rotation object) angle))
 
-(defmethod update-prop! :pixi.object/scale [object _ [x y] _ _]
+(defmethod update-prop! :pixi.object/scale [object _ [x y] _]
   (set! (-> object .-scale .-x) (or x 1))
   (set! (-> object .-scale .-y) (or y 1)))
 
-(defmethod update-prop! :pixi.object/filters [object _ filters _ _]
+(defmethod update-prop! :pixi.object/filters [object _ filters _]
   (set! (.-filters object) (some->> filters (map create-filter) (apply array))))
 
-(defmethod update-prop! :pixi.object/interactive? [object _ interactive? _ _]
+(defmethod update-prop! :pixi.object/interactive? [object _ interactive? _]
   (set! (.-interactive object) interactive?))
 
-(defmethod update-prop! :pixi.event/click [object _ listener _ _]
+(defmethod update-prop! :pixi.event/click [object _ listener _]
   (replace-listener object "click" listener))
 
-(defmethod update-prop! :pixi.event/mouse-down [object _ listener _ _]
+(defmethod update-prop! :pixi.event/mouse-down [object _ listener _]
   (replace-listener object "mousedown" listener))
 
-(defmethod update-prop! :pixi.event/mouse-up [object _ listener _ _]
+(defmethod update-prop! :pixi.event/mouse-up [object _ listener _]
   (replace-listener object "mouseup" listener))
 
-(defmethod update-prop! :pixi.event/mouse-over [object _ listener _ _]
+(defmethod update-prop! :pixi.event/mouse-over [object _ listener _]
   (replace-listener object "mouseover" listener))
 
-(defmethod update-prop! :pixi.event/mouse-out [object _ listener _ _]
+(defmethod update-prop! :pixi.event/mouse-out [object _ listener _]
   (replace-listener object "mouseout" listener))
 
-(defmethod update-prop! :pixi.container/children [container _ children renderer index]
-  (replace-children container (map #(build! index % renderer) children)))
+(defmethod update-prop! :pixi.container/children [container _ children index]
+  (replace-children container (map #(build! index %) children)))
 
-(defmethod update-prop! :pixi.sprite/anchor [sprite _ [x y] _ _]
+(defmethod update-prop! :pixi.sprite/anchor [sprite _ [x y] _]
   (set! (-> sprite .-anchor .-x) x)
   (set! (-> sprite .-anchor .-y) y))
 
-(defmethod update-prop! :pixi.sprite/texture [sprite _ texture renderer index]
-  (set! (.-texture sprite) (build! index texture renderer)))
+(defmethod update-prop! :pixi.sprite/texture [sprite _ texture index]
+  (set! (.-texture sprite) (build! index texture)))
 
-(defmethod update-prop! :pixi.render-texture/source [texture _ scene renderer index]
-  (let [source (build! index scene renderer)]
+(defmethod update-prop! :pixi.render-texture/source [texture _ scene index]
+  (let [source   (build! index scene)
+        renderer *renderer*]
     (.render renderer source texture)
     (on-loaded-textures #(.render renderer source texture))))
 
-(defmethod update-prop! :pixi.render-texture/size [texture _ [w h] _ _]
+(defmethod update-prop! :pixi.render-texture/size [texture _ [w h] _]
   (.resize texture w h true))
 
 (defn- some-kv [pred m]
@@ -222,15 +224,15 @@
   (reduce-kv (fn [_ k v] (proc k v) nil) nil m)
   nil)
 
-(defn- update-changed-prop! [object old-def k v renderer cache-key]
-  (when-not (= v (old-def k)) (update-prop! object k v renderer cache-key)))
+(defn- update-changed-prop! [object old-def k v cache-key]
+  (when-not (= v (old-def k)) (update-prop! object k v cache-key)))
 
-(defn- update-removed-prop! [object new-def k renderer cache-key]
-  (when-not (contains? new-def k) (update-prop! object k nil renderer cache-key)))
+(defn- update-removed-prop! [object new-def k cache-key]
+  (when-not (contains? new-def k) (update-prop! object k nil cache-key)))
 
-(defn- update! [{object :obj old-def :def} new-def renderer key]
-  (run-kv! (fn [k v] (update-changed-prop! object old-def k v renderer key)) new-def)
-  (run-kv! (fn [k _] (update-removed-prop! object new-def k renderer key)) old-def)
+(defn- update! [{object :obj old-def :def} new-def key]
+  (run-kv! (fn [k v] (update-changed-prop! object old-def k v key)) new-def)
+  (run-kv! (fn [k _] (update-removed-prop! object new-def k key)) old-def)
   {:def new-def, :obj object})
 
 (defn- changed-keys? [pred old-def new-def]
@@ -260,7 +262,7 @@
 
 (def object-cache (atom {}))
 
-(defn- build! [index definition renderer]
+(defn- build! [index definition]
   (let [index  (conj index (object-key definition))
         cache! #(swap! object-cache assoc index %)]
     (:obj (if-let [cached (@object-cache index)]
@@ -268,16 +270,16 @@
               (if (= cached-def definition)
                 cached
                 (-> (if (should-recreate? cached-def definition)
-                      (create definition renderer)
+                      (create definition)
                       cached)
-                    (update! definition renderer index)
+                    (update! definition index)
                     (doto cache!))))
-            (-> (create definition renderer)
-                (update! definition renderer index)
+            (-> (create definition)
+                (update! definition index)
                 (doto cache!))))))
 
 (defn render [renderer scene]
-  (let [scene-object (build! [] scene renderer)
+  (let [scene-object (binding [*renderer* renderer] (build! [] scene))
         render-frame (fn [] (js/requestAnimationFrame #(.render renderer scene-object)))]
     (render-frame)
     (on-loaded-textures render-frame)))

@@ -141,80 +141,81 @@
 
 (declare ^:dynamic *renderer*)
 
-(defmulti create :pixi/type)
+(defmulti create
+  (fn [attr value] (:pixi/type value)))
 
-(defmethod create :pixi.type/sprite [_]
-  {:def {}, :obj (js/PIXI.Sprite.)})
+(defmethod create :pixi.type/sprite [_ _]
+  {:val {}, :obj (js/PIXI.Sprite.)})
 
-(defmethod create :pixi.type/container [_]
-  {:def {}, :obj (js/PIXI.Container.)})
+(defmethod create :pixi.type/container [_ _]
+  {:val {}, :obj (js/PIXI.Container.)})
 
-(defmethod create :pixi.type/texture [texture]
-  {:def texture, :obj (get-texture texture)})
+(defmethod create :pixi.type/texture [_ texture]
+  {:val texture, :obj (get-texture texture)})
 
-(defmethod create :pixi.type/render-texture [texture]
+(defmethod create :pixi.type/render-texture [_ texture]
   (let [mode   (-> texture :pixi.texture/scale-mode scale-modes)
         [w h]  (:pixi.render-texture/size texture)
         object (.create js/PIXI.RenderTexture w h mode)]
-    {:def (dissoc texture :pixi.render-texture/source)
+    {:val (dissoc texture :pixi.render-texture/source)
      :obj object}))
 
-(defmulti update-prop! (fn [object key value index] key))
+(defmulti update-prop! (fn [object index attr value] attr))
 
 (defmethod update-prop! :default [object _ _ _])
 
-(defmethod update-prop! :pixi.object/alpha [object _ alpha _]
+(defmethod update-prop! :pixi.object/alpha [object _ _ alpha]
   (set! (.-alpha object) (or alpha 1.0)))
 
-(defmethod update-prop! :pixi.object/position [object _ [x y] _]
+(defmethod update-prop! :pixi.object/position [object _ _ [x y]]
   (set! (-> object .-position .-x) x)
   (set! (-> object .-position .-y) y))
 
-(defmethod update-prop! :pixi.object/rotation [object _ angle _]
+(defmethod update-prop! :pixi.object/rotation [object _ _ angle]
   (set! (.-rotation object) angle))
 
-(defmethod update-prop! :pixi.object/scale [object _ [x y] _]
+(defmethod update-prop! :pixi.object/scale [object _ _ [x y]]
   (set! (-> object .-scale .-x) (or x 1))
   (set! (-> object .-scale .-y) (or y 1)))
 
-(defmethod update-prop! :pixi.object/filters [object _ filters _]
+(defmethod update-prop! :pixi.object/filters [object _ _ filters]
   (set! (.-filters object) (some->> filters (map create-filter) (apply array))))
 
-(defmethod update-prop! :pixi.object/interactive? [object _ interactive? _]
+(defmethod update-prop! :pixi.object/interactive? [object _ _ interactive?]
   (set! (.-interactive object) interactive?))
 
-(defmethod update-prop! :pixi.event/click [object _ listener _]
+(defmethod update-prop! :pixi.event/click [object _ _ listener]
   (replace-listener object "click" listener))
 
-(defmethod update-prop! :pixi.event/mouse-down [object _ listener _]
+(defmethod update-prop! :pixi.event/mouse-down [object _ _ listener]
   (replace-listener object "mousedown" listener))
 
-(defmethod update-prop! :pixi.event/mouse-up [object _ listener _]
+(defmethod update-prop! :pixi.event/mouse-up [object _ _ listener]
   (replace-listener object "mouseup" listener))
 
-(defmethod update-prop! :pixi.event/mouse-over [object _ listener _]
+(defmethod update-prop! :pixi.event/mouse-over [object _ _ listener]
   (replace-listener object "mouseover" listener))
 
-(defmethod update-prop! :pixi.event/mouse-out [object _ listener _]
+(defmethod update-prop! :pixi.event/mouse-out [object _ _ listener]
   (replace-listener object "mouseout" listener))
 
-(defmethod update-prop! :pixi.container/children [container _ children index]
-  (replace-children container (map #(build! index %) children)))
+(defmethod update-prop! :pixi.container/children [container index attr children]
+  (replace-children container (map #(build! index attr %) children)))
 
-(defmethod update-prop! :pixi.sprite/anchor [sprite _ [x y] _]
+(defmethod update-prop! :pixi.sprite/anchor [sprite _ _ [x y]]
   (set! (-> sprite .-anchor .-x) x)
   (set! (-> sprite .-anchor .-y) y))
 
-(defmethod update-prop! :pixi.sprite/texture [sprite _ texture index]
-  (set! (.-texture sprite) (build! index texture)))
+(defmethod update-prop! :pixi.sprite/texture [sprite index attr texture]
+  (set! (.-texture sprite) (build! index attr texture)))
 
-(defmethod update-prop! :pixi.render-texture/source [texture _ scene index]
-  (let [source   (build! index scene)
+(defmethod update-prop! :pixi.render-texture/source [texture index attr scene]
+  (let [source   (build! index attr scene)
         renderer *renderer*]
     (.render renderer source texture)
     (on-loaded-textures #(.render renderer source texture))))
 
-(defmethod update-prop! :pixi.render-texture/size [texture _ [w h] _]
+(defmethod update-prop! :pixi.render-texture/size [texture _ _ [w h]]
   (.resize texture w h true))
 
 (defn- some-kv [pred m]
@@ -224,62 +225,54 @@
   (reduce-kv (fn [_ k v] (proc k v) nil) nil m)
   nil)
 
-(defn- update-changed-prop! [object old-def k v cache-key]
-  (when-not (= v (old-def k)) (update-prop! object k v cache-key)))
+(defn- update-changed-prop! [object index old-value k v]
+  (when-not (= v (old-value k)) (update-prop! object index k v)))
 
-(defn- update-removed-prop! [object new-def k cache-key]
-  (when-not (contains? new-def k) (update-prop! object k nil cache-key)))
+(defn- update-removed-prop! [object index new-value k]
+  (when-not (contains? new-value k) (update-prop! object index k nil)))
 
-(defn- update! [{object :obj old-def :def} new-def key]
-  (run-kv! (fn [k v] (update-changed-prop! object old-def k v key)) new-def)
-  (run-kv! (fn [k _] (update-removed-prop! object new-def k key)) old-def)
-  {:def new-def, :obj object})
+(defn- update! [{object :obj old-value :val} index attr new-value]
+  (run-kv! (fn [k v] (update-changed-prop! object index old-value k v)) new-value)
+  (run-kv! (fn [k _] (update-removed-prop! object index new-value k)) old-value)
+  {:val new-value, :obj object})
 
-(defn- changed-keys? [pred old-def new-def]
-  (or (some-kv (fn [k v] (and (pred k) (not= v (old-def k)))) new-def)
-      (some-kv (fn [k v] (and (pred k) (not (contains? new-def k)))) old-def)))
+(defn- changed-keys? [pred old-value new-value]
+  (or (some-kv (fn [k v] (and (pred k) (not= v (old-value k)))) new-value)
+      (some-kv (fn [k v] (and (pred k) (not (contains? new-value k)))) old-value)))
 
 (defmulti should-recreate?
-  (fn [old-def new-def] (:pixi/type new-def)))
+  (fn [old-value new-value] (:pixi/type new-value)))
 
-(defmethod should-recreate? :default [old-def new-def]
-  (not= (:pixi/type old-def) (:pixi/type new-def)))
+(defmethod should-recreate? :default [old-value new-value]
+  (not= (:pixi/type old-value) (:pixi/type new-value)))
 
-(defmethod should-recreate? :pixi.type/texture [old-def new-def]
-  true)
+(defmethod should-recreate? :pixi.type/texture [_ _] true)
 
-(defmethod should-recreate? :pixi.type/render-texture [old-def new-def]
+(defmethod should-recreate? :pixi.type/render-texture [old-value new-value]
   (let [update-keys #{:pixi.render-texture/size :pixi.render-texture/source}]
-    (changed-keys? (complement update-keys) old-def new-def)))
-
-(defmulti object-key :pixi/type)
-
-(defmethod object-key :default [definition]
-  (:impi/key definition))
-
-(defmethod object-key :pixi.type/texture [_]
-  :pixi.sprite/texture)
+    (changed-keys? (complement update-keys) old-value new-value)))
 
 (def object-cache (atom {}))
 
-(defn- build! [index definition]
-  (let [index  (conj index (object-key definition))
+(defn- build! [index attr value]
+  (let [key    (:impi/key value)
+        index  (-> index (conj attr) (cond-> key (conj key)))
         cache! #(swap! object-cache assoc index %)]
     (:obj (if-let [cached (@object-cache index)]
-            (let [cached-def (:def cached)]
-              (if (= cached-def definition)
+            (let [cached-val (:val cached)]
+              (if (= value cached-val)
                 cached
-                (-> (if (should-recreate? cached-def definition)
-                      (create definition)
+                (-> (if (should-recreate? cached-val value)
+                      (create attr value)
                       cached)
-                    (update! definition index)
+                    (update! index attr value)
                     (doto cache!))))
-            (-> (create definition)
-                (update! definition index)
+            (-> (create attr value)
+                (update! index attr value)
                 (doto cache!))))))
 
 (defn render [renderer scene]
-  (let [scene-object (binding [*renderer* renderer] (build! [] scene))
+  (let [scene-object (binding [*renderer* renderer] (build! [] :pixi/stage scene))
         render-frame (fn [] (js/requestAnimationFrame #(.render renderer scene-object)))]
     (render-frame)
     (on-loaded-textures render-frame)))

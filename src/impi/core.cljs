@@ -146,25 +146,25 @@
 
 (declare ^:dynamic *renderer*)
 
-(defmulti create-typed :pixi/type)
+(defmulti create-object :pixi/type)
 
-(defmethod create-typed :pixi.type/sprite [_]
+(defmethod create-object :pixi.type/sprite [_]
   {:val {}, :obj (js/PIXI.Sprite.)})
 
-(defmethod create-typed :pixi.type/container [_]
+(defmethod create-object :pixi.type/container [_]
   {:val {}, :obj (js/PIXI.Container.)})
 
 (defmulti create
   (fn [attr value] attr))
 
 (defmethod create :pixi/stage [_ value]
-  (create-typed value))
+  (create-object value))
 
 (defmethod create :pixi.container/children [_ value]
-  (create-typed value))
+  (create-object value))
 
 (defmethod create :pixi.render-texture/source [_ value]
-  (create-typed value))
+  (create-object value))
 
 (defmethod create :pixi.sprite/texture [_ value]
   (if (contains? value :pixi.render-texture/source)

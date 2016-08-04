@@ -48,10 +48,7 @@
            :pixi.object/position [200 150]
            :pixi.object/rotation 0.0
            :pixi.sprite/anchor   [0.5 0.5]
-           :pixi.sprite/texture
-           {:pixi/type               :pixi.type/texture
-            :pixi.texture/scale-mode :pixi.texture.scale-mode/linear
-            :pixi.texture/source     "img/bunny.png"}}
+           :pixi.sprite/texture  {:pixi.texture/source "img/bunny.png"}}
           {:impi/key  :bunny2
            :pixi/type :pixi.type/sprite
            :pixi.object/position     [100 100]
@@ -64,8 +61,7 @@
            :pixi.event/mouse-out     (fn [_] (prn :mouse-out))
            :pixi.sprite/anchor       [0.5 0.5]
            :pixi.sprite/texture
-           {:pixi/type               :pixi.type/texture
-            :pixi.texture/scale-mode :pixi.texture.scale-mode/nearest
+           {:pixi.texture/scale-mode :pixi.texture.scale-mode/nearest
             :pixi.texture/source     "img/bunny.png"}}
           {:impi/key  :rendered
            :pixi/type :pixi.type/sprite
@@ -82,8 +78,7 @@
              :pixi.object/position [50 50]
              :pixi.sprite/anchor   [0.5 0.5]
              :pixi.sprite/texture
-             {:pixi/type               :pixi.type/texture
-              :pixi.texture/scale-mode :pixi.texture.scale-mode/nearest
+             {:pixi.texture/scale-mode :pixi.texture.scale-mode/nearest
               :pixi.texture/source     "img/bunny.png"}
              :pixi.object/filters
              [{:pixi.filter/fragment outline-shader

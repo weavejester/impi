@@ -141,24 +141,40 @@
 
 (declare ^:dynamic *renderer*)
 
-(defmulti create
-  (fn [attr value] (:pixi/type value)))
+(defmulti create-typed :pixi/type)
 
-(defmethod create :pixi.type/sprite [_ _]
+(defmethod create-typed :pixi.type/sprite [_]
   {:val {}, :obj (js/PIXI.Sprite.)})
 
-(defmethod create :pixi.type/container [_ _]
+(defmethod create-typed :pixi.type/container [_]
   {:val {}, :obj (js/PIXI.Container.)})
 
-(defmethod create :pixi.type/texture [_ texture]
+(defmethod create-typed :pixi.type/texture [texture]
   {:val texture, :obj (get-texture texture)})
 
-(defmethod create :pixi.type/render-texture [_ texture]
+(defmethod create-typed :pixi.type/render-texture [texture]
   (let [mode   (-> texture :pixi.texture/scale-mode scale-modes)
         [w h]  (:pixi.render-texture/size texture)
         object (.create js/PIXI.RenderTexture w h mode)]
     {:val (dissoc texture :pixi.render-texture/source)
      :obj object}))
+
+(defmulti create
+  (fn [attr value] attr))
+
+(defmethod create :pixi/stage [_ value]
+  (create-typed value))
+
+(defmethod create :pixi.container/children [_ value]
+  (create-typed value))
+
+(defmethod create :pixi.render-texture/source [_ value]
+  (create-typed value))
+
+(defmethod create :pixi.sprite/texture [_ value]
+  (if (:pixi/type value)
+    (create-typed value)
+    {:val value, :obj (get-texture value)}))
 
 (defmulti update-prop! (fn [object index attr value] attr))
 

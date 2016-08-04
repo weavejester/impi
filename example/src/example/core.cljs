@@ -40,17 +40,17 @@
    }")
 
 (reset! state
-        {:impi/key  :stage
-         :pixi/type :pixi.type/container
+        {:impi/key         :stage
+         :pixi.object/type :pixi.object.type/container
          :pixi.container/children
-         [{:impi/key  :bunny1
-           :pixi/type :pixi.type/sprite
+         [{:impi/key             :bunny1
+           :pixi.object/type     :pixi.object.type/sprite
            :pixi.object/position [200 150]
            :pixi.object/rotation 0.0
            :pixi.sprite/anchor   [0.5 0.5]
            :pixi.sprite/texture  {:pixi.texture/source "img/bunny.png"}}
-          {:impi/key  :bunny2
-           :pixi/type :pixi.type/sprite
+          {:impi/key                 :bunny2
+           :pixi.object/type         :pixi.object.type/sprite
            :pixi.object/position     [100 100]
            :pixi.object/scale        [5 5]
            :pixi.object/interactive? true
@@ -63,18 +63,17 @@
            :pixi.sprite/texture
            {:pixi.texture/scale-mode :pixi.texture.scale-mode/nearest
             :pixi.texture/source     "img/bunny.png"}}
-          {:impi/key  :rendered
-           :pixi/type :pixi.type/sprite
+          {:impi/key             :rendered
+           :pixi.object/type     :pixi.object.type/sprite
            :pixi.object/position [0 0]
-           :pixi.object/scale [3 3]
-           :pixi.object/alpha 0.8
+           :pixi.object/scale    [3 3]
+           :pixi.object/alpha    0.8
            :pixi.sprite/texture
-           {:pixi/type               :pixi.type/render-texture
-            :pixi.texture/scale-mode :pixi.texture.scale-mode/nearest
+           {:pixi.texture/scale-mode :pixi.texture.scale-mode/nearest
             :pixi.render-texture/size [100 100]
             :pixi.render-texture/source
-            {:impi/key  :bunny3
-             :pixi/type :pixi.type/sprite
+            {:impi/key             :bunny3
+             :pixi.object/type     :pixi.object.type/sprite
              :pixi.object/position [50 50]
              :pixi.sprite/anchor   [0.5 0.5]
              :pixi.sprite/texture

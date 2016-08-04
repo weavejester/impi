@@ -146,12 +146,12 @@
 
 (declare ^:dynamic *renderer*)
 
-(defmulti create-object :pixi/type)
+(defmulti create-object :pixi.object/type)
 
-(defmethod create-object :pixi.type/sprite [_]
+(defmethod create-object :pixi.object.type/sprite [_]
   {:val {}, :obj (js/PIXI.Sprite.)})
 
-(defmethod create-object :pixi.type/container [_]
+(defmethod create-object :pixi.object.type/container [_]
   {:val {}, :obj (js/PIXI.Container.)})
 
 (defmulti create
@@ -246,7 +246,7 @@
   {:val new-value, :obj object})
 
 (def recreate-keys
-  #{:pixi/type
+  #{:pixi.object/type
     :pixi.texture/scale-mode
     :pixi.texture/source
     :pixi.texture/frame

@@ -230,9 +230,6 @@
 (defmethod update-prop! :pixi.render-texture/size [texture _ _ [w h]]
   (.resize texture w h true))
 
-(defn- some-kv [pred m]
-  (reduce-kv (fn [r k v] (if-let [x (pred k v)] (reduced x) r)) false m))
-
 (defn- run-kv! [proc m]
   (reduce-kv (fn [_ k v] (proc k v) nil) nil m)
   nil)
@@ -248,21 +245,18 @@
   (run-kv! (fn [k _] (update-removed-prop! object index new-value k)) old-value)
   {:val new-value, :obj object})
 
-(defn- changed-keys? [pred old-value new-value]
-  (or (some-kv (fn [k v] (and (pred k) (not= v (old-value k)))) new-value)
-      (some-kv (fn [k v] (and (pred k) (not (contains? new-value k)))) old-value)))
+(def recreate-keys
+  #{:pixi/type
+    :pixi.texture/scale-mode
+    :pixi.texture/source
+    :pixi.texture/frame
+    :pixi.texture/crop
+    :pixi.texture/trim
+    :pixi.texture/rotate})
 
-(defmulti should-recreate?
-  (fn [old-value new-value] (:pixi/type new-value)))
-
-(defmethod should-recreate? :default [old-value new-value]
-  (not= (:pixi/type old-value) (:pixi/type new-value)))
-
-(defmethod should-recreate? :pixi.type/texture [_ _] true)
-
-(defmethod should-recreate? :pixi.type/render-texture [old-value new-value]
-  (let [update-keys #{:pixi.render-texture/size :pixi.render-texture/source}]
-    (changed-keys? (complement update-keys) old-value new-value)))
+(defn- should-recreate? [old-value new-value]
+  (not= (select-keys old-value recreate-keys)
+        (select-keys new-value recreate-keys)))
 
 (def object-cache (atom {}))
 

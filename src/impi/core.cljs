@@ -131,6 +131,11 @@
         (swap! texture-cache assoc texture object)
         object)))
 
+(defn- create-render-texture [texture]
+  (let [mode  (-> texture :pixi.texture/scale-mode scale-modes)
+        [w h] (:pixi.render-texture/size texture)]
+    (.create js/PIXI.RenderTexture w h mode)))
+
 (defn- create-filter [filter]
   (js/PIXI.Filter.
    (:pixi.filter/vertex filter)
@@ -149,16 +154,6 @@
 (defmethod create-typed :pixi.type/container [_]
   {:val {}, :obj (js/PIXI.Container.)})
 
-(defmethod create-typed :pixi.type/texture [texture]
-  {:val texture, :obj (get-texture texture)})
-
-(defmethod create-typed :pixi.type/render-texture [texture]
-  (let [mode   (-> texture :pixi.texture/scale-mode scale-modes)
-        [w h]  (:pixi.render-texture/size texture)
-        object (.create js/PIXI.RenderTexture w h mode)]
-    {:val (dissoc texture :pixi.render-texture/source)
-     :obj object}))
-
 (defmulti create
   (fn [attr value] attr))
 
@@ -172,8 +167,9 @@
   (create-typed value))
 
 (defmethod create :pixi.sprite/texture [_ value]
-  (if (:pixi/type value)
-    (create-typed value)
+  (if (contains? value :pixi.render-texture/source)
+    {:val (dissoc value :pixi.render-texture/source)
+     :obj (create-render-texture value)}
     {:val value, :obj (get-texture value)}))
 
 (defmulti update-prop! (fn [object index attr value] attr))

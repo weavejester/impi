@@ -1,25 +1,6 @@
 (ns impi.core
   (:require cljsjs.pixi))
 
-(defn renderer [[w h] {:keys [background-color]}]
-  (let [r (js/PIXI.autoDetectRenderer w h)]
-    (set! (.-backgroundColor r) background-color)
-    r))
-
-(defn mounted? [renderer element]
-  (and (identical? (.-firstChild element) (.-view renderer))
-       (= (-> element .-childNodes .-length) 1)))
-
-(defn mount [renderer element]
-  (when-not (mounted? renderer element)
-    (set! (.-innerHTML element) "")
-    (.appendChild element (.-view renderer))))
-
-(defn unmount [renderer]
-  (let [view (.-view renderer)]
-    (when-let [parent (.-parentNode view)]
-      (.removeChild parent view))))
-
 (defn- update-count [child f]
   (set! (.-impiCount child) (f (.-impiCount child))))
 
@@ -157,6 +138,10 @@
 (defmulti create
   (fn [attr value] attr))
 
+(defmethod create :pixi/renderer [_ {[w h :as size] :pixi.renderer/size}]
+  {:val {:pixi.renderer/size size}
+   :obj (js/PIXI.autoDetectRenderer w h)})
+
 (defmethod create :pixi/stage [_ value]
   (create-object value))
 
@@ -230,6 +215,12 @@
 (defmethod update-prop! :pixi.render-texture/size [texture _ _ [w h]]
   (.resize texture w h true))
 
+(defmethod update-prop! :pixi.renderer/size [renderer _ _ [w h]]
+  (.resize renderer w h))
+
+(defmethod update-prop! :pixi.renderer/background-color [renderer _ _ color]
+  (set! (.-backgroundColor renderer) color))
+
 (defn- run-kv! [proc m]
   (reduce-kv (fn [_ k v] (proc k v) nil) nil m)
   nil)
@@ -277,8 +268,27 @@
                 (update! index attr value)
                 (doto cache!))))))
 
-(defn render [renderer scene]
-  (let [scene-object (binding [*renderer* renderer] (build! [] :pixi/stage scene))
-        render-frame (fn [] (js/requestAnimationFrame #(.render renderer scene-object)))]
+(defn- render [renderer stage]
+  (let [stage-object (binding [*renderer* renderer] (build! [] :pixi/stage stage))
+        render-frame (fn [] (js/requestAnimationFrame #(.render renderer stage-object)))]
     (render-frame)
     (on-loaded-textures render-frame)))
+
+(defn- mount-view [renderer element]
+  (when-not (mounted? renderer element)
+    (set! (.-innerHTML element) "")
+    (.appendChild element (.-view renderer))))
+
+(defn mounted? [renderer element]
+  (and (identical? (.-firstChild element) (.-view renderer))
+       (= (-> element .-childNodes .-length) 1)))
+
+(defn mount [scene element]
+  (let [renderer (build! [] :pixi/renderer (:pixi/renderer scene))]
+    (mount-view renderer element)
+    (render renderer (:pixi/stage scene))))
+
+(defn unmount [scene]
+  (let [view (.-view renderer)]
+    (when-let [parent (.-parentNode view)]
+      (.removeChild parent view))))

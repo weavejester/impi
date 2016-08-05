@@ -268,27 +268,33 @@
                 (update! index attr value)
                 (doto cache!))))))
 
-(defn- render [renderer stage]
-  (let [stage-object (binding [*renderer* renderer] (build! [] :pixi/stage stage))
-        render-frame (fn [] (js/requestAnimationFrame #(.render renderer stage-object)))]
-    (render-frame)
-    (on-loaded-textures render-frame)))
+(defn- renderer-mounted? [renderer element]
+  (identical? element (.. renderer -view -parentNode)))
 
 (defn- mount-view [renderer element]
-  (when-not (mounted? renderer element)
+  (when-not (renderer-mounted? renderer element)
     (set! (.-innerHTML element) "")
     (.appendChild element (.-view renderer))))
 
-(defn mounted? [renderer element]
-  (and (identical? (.-firstChild element) (.-view renderer))
-       (= (-> element .-childNodes .-length) 1)))
+(defn- build-renderer! [key scene]
+  (build! [key] :pixi/renderer (:pixi/renderer scene)))
 
-(defn mount [scene element]
-  (let [renderer (build! [] :pixi/renderer (:pixi/renderer scene))]
+(defn- build-stage! [renderer key scene]
+  (binding [*renderer* renderer]
+    (build! [key] :pixi/stage (:pixi/stage scene))))
+
+(defn- render-view [renderer stage]
+  (let [render-frame (fn [] (js/requestAnimationFrame #(.render renderer stage)))]
+    (render-frame)
+    (on-loaded-textures render-frame)))
+
+(defn mount [key scene element]
+  (let [renderer (build-renderer! key scene)]
     (mount-view renderer element)
-    (render renderer (:pixi/stage scene))))
+    (render-view renderer (build-stage! renderer key scene))))
 
-(defn unmount [scene]
-  (let [view (.-view renderer)]
-    (when-let [parent (.-parentNode view)]
-      (.removeChild parent view))))
+(defn unmount [key]
+  (when-let [renderer (:obj (@object-cache [key :pixi/renderer]))]
+    (let [view (.-view renderer)]
+      (when-let [parent (.-parentNode view)]
+        (.removeChild parent view)))))

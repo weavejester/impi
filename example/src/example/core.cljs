@@ -89,8 +89,8 @@
   (js/setTimeout #(animate state) 16))
 
 (let [element (.getElementById js/document "app")]
-  (impi/mount @state element)
-  (add-watch state ::mount (fn [_ _ _ s] (impi/mount s element))))
+  (impi/mount :example @state element)
+  (add-watch state ::mount (fn [_ _ _ s] (impi/mount :example s element))))
 
 (defonce x
   (animate state))

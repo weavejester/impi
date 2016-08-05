@@ -44,12 +44,16 @@
   {:impi/key         :stage
    :pixi.object/type :pixi.object.type/container
    :pixi.container/children
-   [{:impi/key             :bunny1
-     :pixi.object/type     :pixi.object.type/sprite
-     :pixi.object/position [200 150]
-     :pixi.object/rotation 0.0
-     :pixi.sprite/anchor   [0.5 0.5]
-     :pixi.sprite/texture  {:pixi.texture/source "img/bunny.png"}}
+   [{:impi/key :performance
+     :pixi.object/type :pixi.object.type/container
+     :pixi.container/children
+     (vec (for [i (range 5), j (range 5)]
+            {:impi/key             (keyword (str "bunny" i "_" j))
+             :pixi.object/type     :pixi.object.type/sprite
+             :pixi.object/position [(+ 200 (* 30 i)) (+ 40 (* 40 j))]
+             :pixi.object/rotation 0.0
+             :pixi.sprite/anchor   [0.5 0.5]
+             :pixi.sprite/texture  {:pixi.texture/source "img/bunny.png"}}))}
     {:impi/key                 :bunny2
      :pixi.object/type         :pixi.object.type/sprite
      :pixi.object/position     [100 100]
@@ -84,8 +88,14 @@
        [{:pixi.filter/fragment outline-shader
          :pixi.filter/uniforms {:dimensions {:type "2f" :value [400.0 300.0]}}}]}}}]}})
 
+(defn- rotate-children [children]
+  (for [child children]
+    (update child :pixi.object/rotation + 0.1)))
+
 (defn animate [state]
-  (swap! state update-in [:pixi/stage :pixi.container/children 0 :pixi.object/rotation] + 0.1)
+  (swap! state
+         update-in [:pixi/stage :pixi.container/children 0 :pixi.container/children]
+         rotate-children)
   (js/setTimeout #(animate state) 16))
 
 (let [element (.getElementById js/document "app")]

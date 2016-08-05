@@ -4,7 +4,8 @@ Impi is **Im**utable **Pi**xi. It's a ClojureScript library for using
 [Pixi.js][] through an immutable data structure.
 
 This library is **experimental**. Experimental means the API is
-unstable, and may change significantly.
+unstable, and may change significantly. Documentation will be sparse
+until the library is in a more usable state.
 
 [pixi.js]: http://www.pixijs.com/
 
@@ -18,33 +19,31 @@ To install, add the following to your project `:dependencies`:
 
 ## Usage
 
-Start by creating a `renderer` of a specific size:
+Impi has just two functions: `mount` and `unmount`.
+
+We can `mount` a data structure that represents a Pixi scene onto a
+DOM node:
 
 ```clojure
-(require '[impi.core :as impi])
-
-(def renderer
-  (impi/renderer [400 300]))
+(impi/mount
+ :example-scene
+ {:pixi/renderer
+  {:pixi.renderer/size [400 300]}
+  :pixi/stage
+  {:impi/key             :bunny
+   :pixi/type            :pixi.type/sprite
+   :pixi.object/position [200 150]
+   :pixi.sprite/anchor   [0.5 0.5]
+   :pixi.sprite/texture
+   {:pixi/type           :pixi.type/texture
+    :pixi.texture/source "img/bunny.png"}}}
+ (.getElementById js/document "app"))
 ```
 
-We can `mount` or `unmount` this renderer onto a DOM node:
+When we've finished, we can `unmount` using the key we supplied:
 
 ```clojure
-(impi/mount renderer (.getElementById js/document "app"))
-```
-
-Once mounted, we can `render` a scene definition:
-
-```clojure
-(impi/render
- renderer
- {:impi/key             :bunny
-  :pixi/type            :pixi.type/sprite
-  :pixi.object/position [200 150]
-  :pixi.sprite/anchor   [0.5 0.5]
-  :pixi.sprite/texture
-  {:pixi/type           :pixi.type/texture
-   :pixi.texture/source "img/bunny.png"}})
+(impi/unmount :example-scene)
 ```
 
 Behind the curtain, Impi converts the immutable scene definition into

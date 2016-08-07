@@ -249,13 +249,13 @@
   (not= (select-keys old-value recreate-keys)
         (select-keys new-value recreate-keys)))
 
-(def object-cache (atom {}))
+(def build-cache (atom {}))
 
 (defn- build! [index attr value]
   (let [key    (:impi/key value)
         index  (-> index (conj attr) (cond-> key (conj key)))
-        cache! #(swap! object-cache assoc index %)]
-    (:obj (if-let [cached (@object-cache index)]
+        cache! #(swap! build-cache assoc index %)]
+    (:obj (if-let [cached (@build-cache index)]
             (let [cached-val (:val cached)]
               (if (= value cached-val)
                 cached
@@ -294,7 +294,7 @@
     (render-view renderer (build-stage! renderer key scene))))
 
 (defn unmount [key]
-  (when-let [renderer (:obj (@object-cache [key :pixi/renderer]))]
+  (when-let [renderer (:obj (@build-cache [key :pixi/renderer]))]
     (let [view (.-view renderer)]
       (when-let [parent (.-parentNode view)]
         (.removeChild parent view)))))

@@ -279,11 +279,13 @@
     (.appendChild element (.-view renderer))))
 
 (defn- build-renderer! [key scene]
-  (build! [key] :pixi/renderer (:pixi/renderer scene)))
+  (when-let [renderer (:pixi/renderer scene)]
+    (build! [key] :pixi/renderer renderer)))
 
 (defn- build-stage! [renderer key scene]
-  (binding [*renderer* renderer]
-    (build! [key] :pixi/stage (:pixi/stage scene))))
+  (when-let [stage (:pixi/stage scene)]
+    (binding [*renderer* renderer]
+      (build! [key] :pixi/stage stage))))
 
 (defn- render-view [renderer stage]
   (let [render-frame (fn [] (js/requestAnimationFrame #(.render renderer stage)))]
@@ -291,9 +293,10 @@
     (on-loaded-textures render-frame)))
 
 (defn mount [key scene element]
-  (let [renderer (build-renderer! key scene)]
+  (when-let [renderer (build-renderer! key scene)]
     (mount-view renderer element)
-    (render-view renderer (build-stage! renderer key scene))))
+    (when-let [stage (build-stage! renderer key scene)]
+      (render-view renderer stage))))
 
 (defn unmount [key]
   (when-let [renderer (:obj (@build-cache [key :pixi/renderer]))]

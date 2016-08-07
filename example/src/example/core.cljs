@@ -44,7 +44,9 @@
   {:impi/key         :stage
    :pixi.object/type :pixi.object.type/container
    :pixi.container/children
-   [{:impi/key :performance
+   (sorted-map
+    :a
+    {:impi/key :performance
      :pixi.object/type :pixi.object.type/container
      :pixi.container/children
      (vec (for [i (range 5), j (range 5)]
@@ -54,6 +56,7 @@
              :pixi.object/rotation 0.0
              :pixi.sprite/anchor   [0.5 0.5]
              :pixi.sprite/texture  {:pixi.texture/source "img/bunny.png"}}))}
+    :b
     {:impi/key                 :bunny2
      :pixi.object/type         :pixi.object.type/sprite
      :pixi.object/position     [100 100]
@@ -68,6 +71,7 @@
      :pixi.sprite/texture
      {:pixi.texture/scale-mode :pixi.texture.scale-mode/nearest
       :pixi.texture/source     "img/bunny.png"}}
+    :c
     {:impi/key             :rendered
      :pixi.object/type     :pixi.object.type/sprite
      :pixi.object/position [0 0]
@@ -86,7 +90,7 @@
         :pixi.texture/source     "img/bunny.png"}
        :pixi.object/filters
        [{:pixi.filter/fragment outline-shader
-         :pixi.filter/uniforms {:dimensions {:type "2f" :value [400.0 300.0]}}}]}}}]}})
+         :pixi.filter/uniforms {:dimensions {:type "2f" :value [400.0 300.0]}}}]}}})}})
 
 (defn- rotate-children [children]
   (for [child children]
@@ -94,7 +98,7 @@
 
 (defn animate [state]
   (swap! state
-         update-in [:pixi/stage :pixi.container/children 0 :pixi.container/children]
+         update-in [:pixi/stage :pixi.container/children :a :pixi.container/children]
          rotate-children)
   (js/setTimeout #(animate state) 16))
 

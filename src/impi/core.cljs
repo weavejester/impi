@@ -197,7 +197,9 @@
   (replace-listener object "mouseout" listener))
 
 (defmethod update-prop! :pixi.container/children [container index attr children]
-  (replace-children container (map #(build! index attr %) children)))
+  (->> (if (map? children) (vals children) children)
+       (map #(build! index attr %))
+       (replace-children container)))
 
 (defmethod update-prop! :pixi.sprite/anchor [sprite _ _ [x y]]
   (set! (-> sprite .-anchor .-x) x)

@@ -138,9 +138,10 @@
 (defmulti create
   (fn [attr value] attr))
 
-(defmethod create :pixi/renderer [_ {[w h :as size] :pixi.renderer/size}]
-  {:val {:pixi.renderer/size size}
-   :obj (js/PIXI.autoDetectRenderer w h)})
+(defmethod create :pixi/renderer
+  [_ {[w h] :pixi.renderer/size, transparent? :pixi.renderer/transparent? :as options}]
+  {:val (select-keys options [:pixi.renderer/size :pixi.renderer/transparent?])
+   :obj (js/PIXI.autoDetectRenderer w h #js {:transparent transparent?})})
 
 (defmethod create :pixi/stage [_ value]
   (create-object value))
@@ -239,7 +240,8 @@
   {:val new-value, :obj object})
 
 (def recreate-keys
-  #{:pixi.object/type
+  #{:pixi.renderer/transparent?
+    :pixi.object/type
     :pixi.texture/scale-mode
     :pixi.texture/source
     :pixi.texture/frame

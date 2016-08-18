@@ -39,7 +39,8 @@
  state
  {:pixi/renderer
   {:pixi.renderer/size             [400 300]
-   :pixi.renderer/background-color 0xbbbbbb}
+   :pixi.renderer/background-color 0xbbbbbb
+   :pixi.renderer/transparent?     true}
   :pixi/stage
   {:impi/key         :stage
    :pixi.object/type :pixi.object.type/container

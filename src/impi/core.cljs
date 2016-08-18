@@ -288,9 +288,9 @@
       (build! [key] :pixi/stage stage))))
 
 (defn- render-view [renderer stage]
-  (let [render-frame (fn [] (js/requestAnimationFrame #(.render renderer stage)))]
-    (render-frame)
-    (on-loaded-textures render-frame)))
+  (letfn [(render [] (.render renderer stage))]
+    (render)
+    (on-loaded-textures #(js/requestAnimationFrame render))))
 
 (defn mount [key scene element]
   (when-let [renderer (build-renderer! key scene)]

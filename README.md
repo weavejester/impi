@@ -14,7 +14,7 @@ until the library is in a more usable state.
 
 To install, add the following to your project `:dependencies`:
 
-    [impi "0.0.2"]
+    [impi "0.0.3"]
 
 
 ## Usage

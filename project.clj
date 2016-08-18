@@ -1,4 +1,4 @@
-(defproject impi "0.0.2"
+(defproject impi "0.0.3"
   :description "ClojureScript library for using Pixi.js through immutable data"
   :url "https://github.com/weavejester/impi"
   :license {:name "Eclipse Public License"

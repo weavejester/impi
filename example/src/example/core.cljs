@@ -41,6 +41,12 @@
   {:pixi.renderer/size             [400 300]
    :pixi.renderer/background-color 0xbbbbbb
    :pixi.renderer/transparent?     true}
+  :pixi/listeners
+  {:click      (fn [_ id] (prn :click id))
+   :mouse-down (fn [_] (prn :mouse-down))
+   :mouse-up   (fn [_] (prn :mouse-up))
+   :mouse-over (fn [_] (prn :mouse-over))
+   :mouse-out  (fn [_] (prn :mouse-out))}
   :pixi/stage
   {:impi/key         :stage
    :pixi.object/type :pixi.object.type/container
@@ -63,11 +69,11 @@
      :pixi.object/position     [100 100]
      :pixi.object/scale        [5 5]
      :pixi.object/interactive? true
-     :pixi.event/click         (fn [_] (prn :click))
-     :pixi.event/mouse-down    (fn [_] (prn :mouse-down))
-     :pixi.event/mouse-up      (fn [_] (prn :mouse-up))
-     :pixi.event/mouse-over    (fn [_] (prn :mouse-over))
-     :pixi.event/mouse-out     (fn [_] (prn :mouse-out))
+     :pixi.event/click         [:click :bunny2]
+     :pixi.event/mouse-down    [:mouse-down]
+     :pixi.event/mouse-up      [:mouse-up]
+     :pixi.event/mouse-over    [:mouse-over]
+     :pixi.event/mouse-out     [:mouse-out]
      :pixi.sprite/anchor       [0.5 0.5]
      :pixi.sprite/texture
      {:pixi.texture/scale-mode :pixi.texture.scale-mode/nearest

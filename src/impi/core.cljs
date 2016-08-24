@@ -54,10 +54,13 @@
       (run! clear-parent removed)
       (run! #(set-parent % container) (.-children container)))))
 
-(defn- replace-listener [object event listener]
-  (doto object
-    (.removeAllListeners event)
-    (.on event listener)))
+(def listeners (atom {}))
+
+(defn- replace-listener [object event index [key & args]]
+  (let [listener ((@listeners (first index)) key)]
+    (doto object
+      (.removeAllListeners event)
+      (.on event #(apply listener % args)))))
 
 (defn- rectangle [[x y w h]]
   (js/PIXI.Rectangle. x y w h))
@@ -182,20 +185,20 @@
 (defmethod update-prop! :pixi.object/interactive? [object _ _ interactive?]
   (set! (.-interactive object) interactive?))
 
-(defmethod update-prop! :pixi.event/click [object _ _ listener]
-  (replace-listener object "click" listener))
+(defmethod update-prop! :pixi.event/click [object index _ listener]
+  (replace-listener object "click" index listener))
 
-(defmethod update-prop! :pixi.event/mouse-down [object _ _ listener]
-  (replace-listener object "mousedown" listener))
+(defmethod update-prop! :pixi.event/mouse-down [object index _ listener]
+  (replace-listener object "mousedown" index listener))
 
-(defmethod update-prop! :pixi.event/mouse-up [object _ _ listener]
-  (replace-listener object "mouseup" listener))
+(defmethod update-prop! :pixi.event/mouse-up [object index _ listener]
+  (replace-listener object "mouseup" index listener))
 
-(defmethod update-prop! :pixi.event/mouse-over [object _ _ listener]
-  (replace-listener object "mouseover" listener))
+(defmethod update-prop! :pixi.event/mouse-over [object index _ listener]
+  (replace-listener object "mouseover" index listener))
 
-(defmethod update-prop! :pixi.event/mouse-out [object _ _ listener]
-  (replace-listener object "mouseout" listener))
+(defmethod update-prop! :pixi.event/mouse-out [object index _ listener]
+  (replace-listener object "mouseout" index listener))
 
 (defmethod update-prop! :pixi.container/children [container index attr children]
   (->> (if (map? children) (vals children) children)
@@ -280,6 +283,9 @@
     (set! (.-innerHTML element) "")
     (.appendChild element (.-view renderer))))
 
+(defn- build-listeners! [key scene]
+  (swap! listeners assoc key (:pixi/listeners scene {})))
+
 (defn- build-renderer! [key scene]
   (when-let [renderer (:pixi/renderer scene)]
     (build! [key] :pixi/renderer renderer)))
@@ -295,6 +301,7 @@
     (on-loaded-textures #(js/requestAnimationFrame render))))
 
 (defn mount [key scene element]
+  (build-listeners! key scene)
   (when-let [renderer (build-renderer! key scene)]
     (mount-view renderer element)
     (when-let [stage (build-stage! renderer key scene)]

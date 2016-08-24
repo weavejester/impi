@@ -21,5 +21,5 @@
                     :optimizations :none}}}}
   :figwheel
   {:http-server-root "public"
-   :server-port      3000
+   :server-port      3001
    :css-dirs         ["resources/public/css"]})

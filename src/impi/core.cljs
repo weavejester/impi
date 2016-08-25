@@ -185,6 +185,9 @@
 (defmethod update-prop! :pixi.object/interactive? [object _ _ interactive?]
   (set! (.-interactive object) interactive?))
 
+(defmethod update-prop! :pixi.object/hit-area [object _ _ rect]
+  (set! (.-hitArea object) (rectangle rect)))
+
 (defmethod update-prop! :pixi.event/click [object index _ listener]
   (replace-listener object "click" index listener))
 

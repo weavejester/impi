@@ -40,7 +40,7 @@
  {:pixi/renderer
   {:pixi.renderer/size             [400 300]
    :pixi.renderer/background-color 0xbbbbbb
-   :pixi.renderer/transparent?     true}
+   :pixi.renderer/transparent?     false}
   :pixi/listeners
   {:click      (fn [_ id] (prn :click id))
    :mouse-down (fn [_] (prn :mouse-down))
@@ -53,6 +53,12 @@
    :pixi.container/children
    (sorted-map
     :a
+    {:impi/key :background
+     :pixi.object/type :pixi.object.type/container
+     :pixi.object/interactive? true
+     :pixi.object/hit-area [0 0 400 300]
+     :pixi.event/click [:click :background]}
+    :b
     {:impi/key :performance
      :pixi.object/type :pixi.object.type/container
      :pixi.container/children
@@ -63,7 +69,7 @@
              :pixi.object/rotation 0.0
              :pixi.sprite/anchor   [0.5 0.5]
              :pixi.sprite/texture  {:pixi.texture/source "img/bunny.png"}}))}
-    :b
+    :c
     {:impi/key                 :bunny2
      :pixi.object/type         :pixi.object.type/sprite
      :pixi.object/position     [100 100]
@@ -78,7 +84,7 @@
      :pixi.sprite/texture
      {:pixi.texture/scale-mode :pixi.texture.scale-mode/nearest
       :pixi.texture/source     "img/bunny.png"}}
-    :c
+    :d
     {:impi/key             :rendered
      :pixi.object/type     :pixi.object.type/sprite
      :pixi.object/position [0 0]
@@ -105,7 +111,7 @@
 
 (defn animate [state]
   (swap! state
-         update-in [:pixi/stage :pixi.container/children :a :pixi.container/children]
+         update-in [:pixi/stage :pixi.container/children :b :pixi.container/children]
          rotate-children)
   (js/setTimeout #(animate state) 16))
 

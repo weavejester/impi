@@ -13,7 +13,7 @@
    uniform vec2 dimensions;
 
    void main(void) {
-       vec2 pixelSize  = vec2(4.0) / dimensions;
+       vec2 pixelSize  = vec2(1.0) / dimensions;
        vec4 pixel      = texture2D(uSampler, vTextureCoord);
        vec4 pixelUp    = texture2D(uSampler, vTextureCoord - vec2(0.0, pixelSize.y));
        vec4 pixelDown  = texture2D(uSampler, vTextureCoord + vec2(0.0, pixelSize.y));

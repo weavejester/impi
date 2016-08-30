@@ -56,7 +56,7 @@
     {:impi/key :background
      :pixi.object/type :pixi.object.type/container
      :pixi.object/interactive? true
-     :pixi.object/hit-area [0 0 400 300]
+     :pixi.object/contains-point (constantly true)
      :pixi.event/click [:click :background]}
     :b
     {:impi/key :performance

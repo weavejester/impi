@@ -186,7 +186,14 @@
   (set! (.-interactive object) interactive?))
 
 (defmethod update-prop! :pixi.object/hit-area [object _ _ rect]
-  (set! (.-hitArea object) (rectangle rect)))
+  (if (some? rect)
+    (set! (.-hitArea object) (rectangle rect))
+    (js-delete object "hitArea")))
+
+(defmethod update-prop! :pixi.object/contains-point [object _ _ pred]
+  (if (some? pred)
+    (set! (.-containsPoint object) pred)
+    (js-delete object "containsPoint")))
 
 (defmethod update-prop! :pixi.event/click [object index _ listener]
   (replace-listener object "click" index listener))

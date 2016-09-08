@@ -74,6 +74,12 @@
   {:pixi.texture.scale-mode/linear  js/PIXI.SCALE_MODES.LINEAR
    :pixi.texture.scale-mode/nearest js/PIXI.SCALE_MODES.NEAREST})
 
+(def ^:private blend-modes
+  {:pixi.object.blend-mode/normal   js/PIXI.BLEND_MODES.NORMAL
+   :pixi.object.blend-mode/add      js/PIXI.BLEND_MODES.ADD
+   :pixi.object.blend-mode/multiply js/PIXI.BLEND_MODES.MULTIPLY
+   :pixi.object.blend-mode/screen   js/PIXI.BLEND_MODES.SCREEN})
+
 (def base-texture-cache    (atom {}))
 (def pending-base-textures (atom #{}))
 
@@ -167,6 +173,9 @@
 
 (defmethod update-prop! :pixi.object/alpha [object _ _ alpha]
   (set! (.-alpha object) (or alpha 1.0)))
+
+(defmethod update-prop! :pixi.object/blend-mode [object _ _ mode]
+  (set! (.-blendMode object) (blend-modes mode js/PIXI.BLEND_MODES.NORMAL)))
 
 (defmethod update-prop! :pixi.object/position [object _ _ [x y]]
   (set! (-> object .-position .-x) x)

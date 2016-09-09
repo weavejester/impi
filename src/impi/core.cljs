@@ -167,6 +167,9 @@
      :obj (create-render-texture value)}
     {:val value, :obj (get-texture value)}))
 
+(defmethod create :pixi.object/filters [_ value]
+  {:val value, :obj (create-filter value)})
+
 (defmulti update-prop! (fn [object index attr value] attr))
 
 (defmethod update-prop! :default [object _ _ _])
@@ -188,8 +191,8 @@
   (set! (-> object .-scale .-x) (or x 1))
   (set! (-> object .-scale .-y) (or y 1)))
 
-(defmethod update-prop! :pixi.object/filters [object _ _ filters]
-  (set! (.-filters object) (some->> filters (map create-filter) (apply array))))
+(defmethod update-prop! :pixi.object/filters [object index attr filters]
+  (set! (.-filters object) (apply array (map #(build! index attr %) filters))))
 
 (defmethod update-prop! :pixi.object/interactive? [object _ _ interactive?]
   (set! (.-interactive object) interactive?))
@@ -269,7 +272,10 @@
     :pixi.texture/frame
     :pixi.texture/crop
     :pixi.texture/trim
-    :pixi.texture/rotate})
+    :pixi.texture/rotate
+    :pixi.filter/vertex
+    :pixi.filter/fragment
+    :pixi.filter/uniforms})
 
 (defn- should-recreate? [old-value new-value]
   (not= (select-keys old-value recreate-keys)

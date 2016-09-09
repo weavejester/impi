@@ -249,6 +249,9 @@
 (defmethod update-prop! :pixi.renderer/background-color [renderer _ _ color]
   (set! (.-backgroundColor renderer) color))
 
+(defmethod update-prop! :pixi.filter/padding [filter _ _ padding]
+  (set! (.-padding filter) padding))
+
 (defn- run-kv! [proc m]
   (reduce-kv (fn [_ k v] (proc k v) nil) nil m)
   nil)

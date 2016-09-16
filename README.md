@@ -31,12 +31,10 @@ DOM node:
   {:pixi.renderer/size [400 300]}
   :pixi/stage
   {:impi/key             :bunny
-   :pixi/type            :pixi.type/sprite
+   :pixi.object/type     :pixi.object.type/sprite
    :pixi.object/position [200 150]
    :pixi.sprite/anchor   [0.5 0.5]
-   :pixi.sprite/texture
-   {:pixi/type           :pixi.type/texture
-    :pixi.texture/source "img/bunny.png"}}}
+   :pixi.sprite/texture  {:pixi.texture/source "img/bunny.png"}}}
  (.getElementById js/document "app"))
 ```
 

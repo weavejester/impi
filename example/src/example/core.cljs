@@ -38,7 +38,7 @@
 (reset!
  state
  {:pixi/renderer
-  {:pixi.renderer/size             [400 300]
+  {:pixi.renderer/size             [400 400]
    :pixi.renderer/background-color 0xbbbbbb
    :pixi.renderer/transparent?     false}
   :pixi/listeners
@@ -103,7 +103,35 @@
         :pixi.texture/source     "img/bunny.png"}
        :pixi.object/filters
        [{:pixi.filter/fragment outline-shader
-         :pixi.filter/uniforms {:dimensions {:type "2f" :value [400.0 300.0]}}}]}}})}})
+         :pixi.filter/uniforms {:dimensions {:type "2f" :value [400.0 300.0]}}}]}}}
+    :e
+    {:impi/key :text
+     :pixi.object/type :pixi.object.type/text
+     :pixi.object/position [100 290]
+     :pixi.text/text "Hello World!"
+     :pixi.text/style 
+     {:pixi.text.style/align "center"
+      :pixi.text.style/break-words true
+      :pixi.text.style/drop-shadow true
+      :pixi.text.style/drop-shadow-angle (/ Math.PI 6)
+      :pixi.text.style/drop-shadow-blur 0
+      :pixi.text.style/drop-shadow-color 0x222222
+      :pixi.text.style/drop-shadow-distance 5
+      :pixi.text.style/fill 0xFFFF00
+      :pixi.text.style/font-family "Arial"
+      :pixi.text.style/font-size 24
+      :pixi.text.style/font-style "italic"
+      :pixi.text.style/font-variant "small-caps"
+      :pixi.text.style/font-weight "bold"
+      :pixi.text.style/letter-spacing 0
+      :pixi.text.style/line-height 26
+      :pixi.text.style/line-join "miter"
+      :pixi.text.style/miter-limit 10
+      :pixi.text.style/padding 0
+      :pixi.text.style/stroke 0x00FFFF
+      :pixi.text.style/stroke-thickness 0
+      :pixi.text.style/word-wrap true
+      :pixi.text.style/word-wrap-width 100}})}})
 
 (defn- rotate-children [children]
   (for [child children]

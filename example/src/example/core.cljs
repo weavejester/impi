@@ -103,7 +103,29 @@
         :pixi.texture/source     "img/bunny.png"}
        :pixi.object/filters
        [{:pixi.filter/fragment outline-shader
-         :pixi.filter/uniforms {:dimensions {:type "2f" :value [400.0 300.0]}}}]}}})}})
+         :pixi.filter/uniforms {:dimensions {:type "2f" :value [400.0 300.0]}}}]}}}
+    :e
+    {:impi/key :gfx
+     :pixi.object/position [50 240]
+     :pixi.object/type :pixi.object.type/graphics
+     :pixi.graphics/shapes
+     [{:pixi.shape/type :pixi.shape/circle
+       :pixi.shape/circle [0 20 20]
+       :pixi.shape/fill [0x114455 0.7]
+       :pixi.shape/line [3 0x0000FF 0.8]}
+      {:pixi.shape/type :pixi.shape/ellipse
+       :pixi.shape/ellipse [60 20 20 15]
+       :pixi.shape/fill [0xFF0000 1] }
+      {:pixi.shape/type :pixi.shape/polygon
+       :pixi.shape/polygon [100 0, 160 0, 130 30, 100 30]
+       :pixi.shape/fill [0xFFFF00 1]}
+     {:pixi.shape/type :pixi.shape/rectangle
+      :pixi.shape/rectangle [170 0 50 40]
+      :pixi.shape/fill [0x004433 1]}
+     {:pixi.shape/type :pixi.shape/rounded-rectangle
+      :pixi.shape/rounded-rectangle [240 0 50 40 5]
+      :pixi.shape/fill [0x221155 1]}]}
+     )}})
 
 (defn- rotate-children [children]
   (for [child children]

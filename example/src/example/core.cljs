@@ -103,7 +103,36 @@
         :pixi.texture/source     "img/bunny.png"}
        :pixi.object/filters
        [{:pixi.filter/fragment outline-shader
-         :pixi.filter/uniforms {:dimensions {:type "2f" :value [400.0 300.0]}}}]}}})}})
+         :pixi.filter/uniforms {:dimensions {:type "2f" :value [400.0 300.0]}}}]}}}
+    :e
+    {:impi/key :gfx
+     :pixi.object/position [50 240]
+     :pixi.object/type :pixi.object.type/graphics
+     :pixi.graphics/shapes
+     [{:pixi.shape/type :pixi.shape.type/circle
+       :pixi.shape/position [0 20]
+       :pixi.circle/radius 20
+       :pixi.shape/line
+       {:pixi.line/width 4
+        :pixi.line/color 0x22FF11
+        :pixi.line/alpha 0.7}}
+      {:pixi.shape/type :pixi.shape.type/ellipse
+       :pixi.shape/position [60 20]
+       :pixi.ellipse/radius [30 20]
+       :pixi.shape/fill {:pixi.fill/color 0xFF0000}}
+      {:pixi.shape/type :pixi.shape.type/polygon
+       :pixi.polygon/path [100 0, 160 0, 130 40, 100 40]
+       :pixi.shape/fill {:pixi.fill/color 0xFFFF00}}
+      {:pixi.shape/type :pixi.shape.type/rectangle
+       :pixi.shape/position [170 0]
+       :pixi.shape/size [50 40]
+       :pixi.shape/fill {:pixi.fill/color 0x004433
+                         :pixi.fill/alpha 0.6}}
+      {:pixi.shape/type :pixi.shape.type/rounded-rectangle
+       :pixi.shape/position [240 0]
+       :pixi.shape/size [50 40]
+       :pixi.rounded-rectangle/radius 5
+       :pixi.shape/fill {:pixi.fill/color 0x221155}}]})}})
 
 (defn- rotate-children [children]
   (for [child children]

@@ -126,6 +126,33 @@
         [w h] (:pixi.render-texture/size texture)]
     (.create js/PIXI.RenderTexture w h mode)))
 
+(defmulti draw-shape! (fn [_ v] (v :pixi.shape/type)))
+
+(defmethod draw-shape! :pixi.shape.type/circle 
+  [graphics {[x y]  :pixi.shape/position
+             radius :pixi.circle/radius}]
+  (.drawCircle graphics x y radius))
+
+(defmethod draw-shape! :pixi.shape.type/ellipse 
+  [graphics {[x y]               :pixi.shape/position
+             [x-radius y-radius] :pixi.ellipse/radius}]
+  (.drawEllipse graphics x y x-radius y-radius))
+
+(defmethod draw-shape! :pixi.shape.type/polygon 
+  [graphics {path :pixi.polygon/path}]
+  (.drawPolygon graphics (clj->js path)))
+
+(defmethod draw-shape! :pixi.shape.type/rectangle
+  [graphics {[x y]          :pixi.shape/position
+             [width height] :pixi.shape/size}]
+  (.drawRect graphics x y width height))
+
+(defmethod draw-shape! :pixi.shape.type/rounded-rectangle
+  [graphics {[x y]          :pixi.shape/position
+             [width height] :pixi.shape/size
+             radius         :pixi.rounded-rectangle/radius}]
+  (.drawRoundedRect graphics x y width height radius))
+
 (defn- create-filter [filter]
   (js/PIXI.Filter.
    (:pixi.filter/vertex filter)
@@ -143,6 +170,9 @@
 
 (defmethod create-object :pixi.object.type/container [_]
   {:val {}, :obj (js/PIXI.Container.)})
+
+(defmethod create-object :pixi.object.type/graphics [_]
+  {:val {}, :obj (js/PIXI.Graphics.)})
 
 (defmulti create
   (fn [attr value] attr))
@@ -166,6 +196,9 @@
     {:val (dissoc value :pixi.render-texture/source)
      :obj (create-render-texture value)}
     {:val value, :obj (get-texture value)}))
+
+(defmethod create :pixi.graphics/shapes [graphics value]
+  {:val value, :obj #js {}})
 
 (defmethod create :pixi.object/filters [_ value]
   {:val value, :obj (create-filter value)})
@@ -226,6 +259,22 @@
   (->> (if (map? children) (vals children) children)
        (map #(build! index attr %))
        (replace-children container)))
+
+(defmethod update-prop! :pixi.graphics/shapes 
+  [graphics-obj _ _ shapes]
+  (.clear graphics-obj)
+  (doseq [{:keys [pixi.shape/fill pixi.shape/line] :as shape}
+          (if (map? shapes) (vals shapes) shapes)]
+    (.lineStyle graphics-obj
+                (or (:pixi.line/width line) 0)
+                (:pixi.line/color line)
+                (or (:pixi.line/alpha line) 1))
+    (when fill 
+      (.beginFill graphics-obj
+                  (:pixi.fill/color fill)
+                  (or (:pixi.fill/alpha fill) 1)))
+    (draw-shape! graphics-obj shape)
+    (when fill (.endFill graphics-obj))))
 
 (defmethod update-prop! :pixi.sprite/anchor [sprite _ _ [x y]]
   (set! (-> sprite .-anchor .-x) x)

@@ -80,6 +80,30 @@
    :pixi.object.blend-mode/multiply js/PIXI.BLEND_MODES.MULTIPLY
    :pixi.object.blend-mode/screen   js/PIXI.BLEND_MODES.SCREEN})
 
+(def ^:private text-properties
+  {:pixi.text.style/align "align"
+   :pixi.text.style/break-words "breakWords"
+   :pixi.text.style/drop-shadow "dropShadow"
+   :pixi.text.style/drop-shadow-angle "dropShadowAngle"
+   :pixi.text.style/drop-shadow-blur "dropShadowBlur"
+   :pixi.text.style/drop-shadow-color "dropShadowSolor"
+   :pixi.text.style/drop-shadow-distance "dropShadowDistance"
+   :pixi.text.style/fill "fill"
+   :pixi.text.style/font-family "fontFamily"
+   :pixi.text.style/font-size "fontSize"
+   :pixi.text.style/font-style "fontStyle"
+   :pixi.text.style/font-variant "fontVariant"
+   :pixi.text.style/font-weight "fontWeight"
+   :pixi.text.style/letter-spacing "letterSpacing"
+   :pixi.text.style/line-height "lineHeight"
+   :pixi.text.style/line-join "lineJoin"
+   :pixi.text.style/miter-limit "miterLimit"
+   :pixi.text.style/padding "padding"
+   :pixi.text.style/stroke "stroke"
+   :pixi.text.style/stroke-thickness "strokeThickness"
+   :pixi.text.style/word-wrap "wordWrap"
+   :pixi.text.style/word-wrap-width "wordWrapWidth"})
+
 (def base-texture-cache    (atom {}))
 (def pending-base-textures (atom #{}))
 
@@ -174,6 +198,9 @@
 (defmethod create-object :pixi.object.type/graphics [_]
   {:val {}, :obj (js/PIXI.Graphics.)})
 
+(defmethod create-object :pixi.object.type/text [_]
+  {:val {}, :obj (js/PIXI.Text.)})
+
 (defmulti create
   (fn [attr value] attr))
 
@@ -199,6 +226,9 @@
 
 (defmethod create :pixi.graphics/shapes [graphics value]
   {:val value, :obj #js {}})
+
+(defmethod create :pixi.text/style [_ value]
+  {:val {}, :obj (js/PIXI.TextStyle.)})
 
 (defmethod create :pixi.object/filters [_ value]
   {:val value, :obj (create-filter value)})
@@ -275,6 +305,18 @@
                   (or (:pixi.fill/alpha fill) 1)))
     (draw-shape! graphics-obj shape)
     (when fill (.endFill graphics-obj))))
+
+(defmethod update-prop! :pixi.text/text  [object _ _ text]
+  (set! (.-text object) text))
+
+(defmethod update-prop! :pixi.text/style [object index attr text-style]
+  (set! (.-style object) (build! index attr text-style)))
+
+(doseq [attr (keys text-properties)]
+  (derive attr :pixi.text.style/property))
+
+(defmethod update-prop! :pixi.text.style/property [object _ attr value]
+  (aset object (text-properties attr) value))
 
 (defmethod update-prop! :pixi.sprite/anchor [sprite _ _ [x y]]
   (set! (-> sprite .-anchor .-x) x)

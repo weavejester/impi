@@ -183,11 +183,15 @@
    (:pixi.filter/fragment filter)
    (clj->js (:pixi.filter/uniforms filter))))
 
+(defn- render-texture? [texture]
+  (contains? texture :pixi.render-texture/source))
+
 (defn- create-frame-array [frames]
   (reduce
    (fn [arr {:keys [pixi.frame/duration, pixi.frame/texture]}]
-     (doto arr
-       (.push #js {:time duration, :texture (get-texture texture)})))
+     (assert (not (render-texture? texture)) "Movie clip frame cannot be a render texture")
+     (.push arr #js {:time duration, :texture (get-texture texture)})
+     arr)
    #js []
    frames))
 
@@ -233,7 +237,7 @@
   (create-object value))
 
 (defmethod create :pixi.sprite/texture [_ value]
-  (if (contains? value :pixi.render-texture/source)
+  (if (render-texture? value)
     {:val (dissoc value :pixi.render-texture/source)
      :obj (create-render-texture value)}
     {:val value, :obj (get-texture value)}))

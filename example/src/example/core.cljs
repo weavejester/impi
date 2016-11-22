@@ -160,7 +160,20 @@
       :pixi.text.style/stroke 0x00FFFF
       :pixi.text.style/stroke-thickness 0
       :pixi.text.style/word-wrap true
-      :pixi.text.style/word-wrap-width 100}})}})
+      :pixi.text.style/word-wrap-width 100}}
+    :g
+    {:impi/key              :animated
+     :pixi.object/type      :pixi.object.type/movie-clip
+     :pixi.object/position  [50 320]
+     :pixi.object/scale     [2 2]
+     :pixi.sprite/anchor    [0.5 0.5]
+     :pixi.movie-clip/frames
+     [{:pixi.frame/duration 1000
+       :pixi.frame/texture  {:pixi.texture/scale-mode :pixi.texture.scale-mode/nearest
+                             :pixi.texture/source "img/bunny.png"}}
+      {:pixi.frame/duration 250
+       :pixi.frame/texture  {:pixi.texture/scale-mode :pixi.texture.scale-mode/nearest
+                             :pixi.texture/source "img/bunnyblink.png"}}]})}})
 
 (defn- rotate-children [children]
   (for [child children]

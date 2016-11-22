@@ -183,6 +183,14 @@
    (:pixi.filter/fragment filter)
    (clj->js (:pixi.filter/uniforms filter))))
 
+(defn- create-frame-array [frames]
+  (reduce
+   (fn [arr {:keys [pixi.frame/duration, pixi.frame/texture]}]
+     (doto arr
+       (.push #js {:time duration, :texture (get-texture texture)})))
+   #js []
+   frames))
+
 (declare build!)
 
 (declare ^:dynamic *renderer*)
@@ -191,6 +199,10 @@
 
 (defmethod create-object :pixi.object.type/sprite [_]
   {:val {}, :obj (js/PIXI.Sprite.)})
+
+(defmethod create-object :pixi.object.type/movie-clip [{:keys [pixi.movie-clip/frames]}]
+  {:val {}, :obj (doto (js/PIXI.extras.MovieClip. (create-frame-array frames))
+                   (.play))})
 
 (defmethod create-object :pixi.object.type/container [_]
   {:val {}, :obj (js/PIXI.Container.)})
@@ -324,6 +336,9 @@
 
 (defmethod update-prop! :pixi.sprite/texture [sprite index attr texture]
   (set! (.-texture sprite) (build! index attr texture)))
+
+(defmethod update-prop! :pixi.movie-clip/frames [movie-clip _ _ frames]
+  (set! (.-textures movie-clip) (create-frame-array frames)))
 
 (defmethod update-prop! :pixi.render-texture/source [texture index attr scene]
   (let [source   (build! index attr scene)

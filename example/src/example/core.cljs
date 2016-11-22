@@ -169,6 +169,7 @@
      :pixi.sprite/anchor      [0.5 0.5]
      :pixi.movie-clip/loop?   true
      :pixi.movie-clip/paused? false
+     :pixi.movie-clip/animation-speed 0.5
      :pixi.movie-clip/frames
      [{:pixi.frame/duration 1000
        :pixi.frame/texture  {:pixi.texture/scale-mode :pixi.texture.scale-mode/nearest

@@ -355,6 +355,9 @@
   (when (and loop? (not (.-playing movie-clip)) (not (.-impiPaused movie-clip)))
     (.play movie-clip)))
 
+(defmethod update-prop! :pixi.movie-clip/animation-speed [movie-clip _ _ speed]
+  (set! (.-animationSpeed movie-clip) speed))
+
 (defmethod update-prop! :pixi.render-texture/source [texture index attr scene]
   (let [source   (build! index attr scene)
         renderer *renderer*]

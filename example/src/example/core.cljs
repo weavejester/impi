@@ -162,11 +162,13 @@
       :pixi.text.style/word-wrap true
       :pixi.text.style/word-wrap-width 100}}
     :g
-    {:impi/key              :animated
-     :pixi.object/type      :pixi.object.type/movie-clip
-     :pixi.object/position  [50 320]
-     :pixi.object/scale     [2 2]
-     :pixi.sprite/anchor    [0.5 0.5]
+    {:impi/key                :animated
+     :pixi.object/type        :pixi.object.type/movie-clip
+     :pixi.object/position    [50 320]
+     :pixi.object/scale       [2 2]
+     :pixi.sprite/anchor      [0.5 0.5]
+     :pixi.movie-clip/loop?   true
+     :pixi.movie-clip/paused? false
      :pixi.movie-clip/frames
      [{:pixi.frame/duration 1000
        :pixi.frame/texture  {:pixi.texture/scale-mode :pixi.texture.scale-mode/nearest

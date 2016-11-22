@@ -343,10 +343,16 @@
   (set! (.-textures movie-clip) (create-frame-array frames)))
 
 (defmethod update-prop! :pixi.movie-clip/paused? [movie-clip _ _ paused?]
+  (set! (.-impiPaused movie-clip) paused?)
   (cond
     (and paused? (.-playing movie-clip))
     (.stop movie-clip)
     (and (not paused?) (not (.-playing movie-clip)))
+    (.play movie-clip)))
+
+(defmethod update-prop! :pixi.movie-clip/loop? [movie-clip _ _ loop?]
+  (set! (.-loop movie-clip) loop?)
+  (when (and loop? (not (.-playing movie-clip)) (not (.-impiPaused movie-clip)))
     (.play movie-clip)))
 
 (defmethod update-prop! :pixi.render-texture/source [texture index attr scene]

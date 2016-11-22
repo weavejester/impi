@@ -200,9 +200,11 @@
 (defmethod create-object :pixi.object.type/sprite [_]
   {:val {}, :obj (js/PIXI.Sprite.)})
 
-(defmethod create-object :pixi.object.type/movie-clip [{:keys [pixi.movie-clip/frames]}]
-  {:val {}, :obj (doto (js/PIXI.extras.MovieClip. (create-frame-array frames))
-                   (.play))})
+(defmethod create-object :pixi.object.type/movie-clip
+  [{:keys [pixi.movie-clip/frames pixi.movie-clip/paused?]}]
+  (let [movie-clip (js/PIXI.extras.MovieClip. (create-frame-array frames))]
+    (when-not paused? (.play movie-clip))
+    {:val {}, :obj movie-clip}))
 
 (defmethod create-object :pixi.object.type/container [_]
   {:val {}, :obj (js/PIXI.Container.)})
@@ -339,6 +341,13 @@
 
 (defmethod update-prop! :pixi.movie-clip/frames [movie-clip _ _ frames]
   (set! (.-textures movie-clip) (create-frame-array frames)))
+
+(defmethod update-prop! :pixi.movie-clip/paused? [movie-clip _ _ paused?]
+  (cond
+    (and paused? (.-playing movie-clip))
+    (.stop movie-clip)
+    (and (not paused?) (not (.-playing movie-clip)))
+    (.play movie-clip)))
 
 (defmethod update-prop! :pixi.render-texture/source [texture index attr scene]
   (let [source   (build! index attr scene)

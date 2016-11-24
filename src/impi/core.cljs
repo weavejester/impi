@@ -197,7 +197,16 @@
 
 (declare build!)
 
-(declare ^:dynamic *renderer*)
+(def render-cache (atom {}))
+
+(defn- cache-index [index attr {:keys [impi/key]}]
+  (-> index (conj attr) (cond-> key (conj key))))
+
+(defn- cache-render-texture! [index texture source]
+  (swap! render-cache update (first index) assoc index #(.render % source texture)))
+
+(defn- uncache-render-texture! [index]
+  (swap! render-cache update (first index) dissoc index))
 
 (defmulti create-object :pixi.object/type)
 
@@ -362,11 +371,11 @@
 (defmethod update-prop! :pixi.movie-clip/animation-speed [movie-clip _ _ speed]
   (set! (.-animationSpeed movie-clip) speed))
 
-(defmethod update-prop! :pixi.render-texture/source [texture index attr scene]
-  (let [source   (build! index attr scene)
-        renderer *renderer*]
-    (.render renderer source texture)
-    (on-loaded-textures #(.render renderer source texture))))
+(defmethod update-prop! :pixi.render-texture/source [texture index attr source]
+  (let [index (cache-index index attr source)]
+    (if (some? source)
+      (cache-render-texture! index texture (build! index attr source))
+      (uncache-render-texture! index))))
 
 (defmethod update-prop! :pixi.render-texture/size [texture _ _ [w h]]
   (.resize texture w h true))
@@ -415,8 +424,7 @@
 (def build-cache (atom {}))
 
 (defn- build! [index attr value]
-  (let [key    (:impi/key value)
-        index  (-> index (conj attr) (cond-> key (conj key)))
+  (let [index  (cache-index index attr value)
         cache! #(swap! build-cache assoc index %)]
     (:obj (if-let [cached (@build-cache index)]
             (let [cached-val (:val cached)]
@@ -448,11 +456,13 @@
 
 (defn- build-stage! [renderer key scene]
   (when-let [stage (:pixi/stage scene)]
-    (binding [*renderer* renderer]
-      (build! [key] :pixi/stage stage))))
+    (build! [key] :pixi/stage stage)))
 
-(defn- render-view [renderer stage]
-  (letfn [(render [] (.render renderer stage))]
+(defn- render-view [key renderer stage]
+  (letfn [(render []
+            (doseq [f (vals (@render-cache key))]
+              (f renderer))
+            (.render renderer stage))]
     (render)
     (on-loaded-textures #(js/requestAnimationFrame render))))
 
@@ -461,7 +471,7 @@
   (when-let [renderer (build-renderer! key scene)]
     (mount-view renderer element)
     (when-let [stage (build-stage! renderer key scene)]
-      (render-view renderer stage))))
+      (render-view key renderer stage))))
 
 (defn unmount [key]
   (when-let [renderer (:obj (@build-cache [key :pixi/renderer]))]

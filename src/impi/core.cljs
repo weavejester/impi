@@ -352,9 +352,6 @@
 (defmethod update-prop! :pixi.sprite/texture [sprite index attr texture]
   (set! (.-texture sprite) (build! index attr texture)))
 
-(defmethod update-prop! :pixi.movie-clip/frames [movie-clip _ _ frames]
-  (set! (.-textures movie-clip) (create-frame-array frames)))
-
 (defmethod update-prop! :pixi.movie-clip/paused? [movie-clip _ _ paused?]
   (set! (.-impiPaused movie-clip) paused?)
   (cond
@@ -407,6 +404,7 @@
 (def recreate-keys
   #{:pixi.renderer/transparent?
     :pixi.object/type
+    :pixi.movie-clip/frames
     :pixi.texture/scale-mode
     :pixi.texture/source
     :pixi.texture/frame

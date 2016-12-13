@@ -222,6 +222,9 @@
 (defmethod create-object :pixi.object.type/container [_]
   {:val {}, :obj (js/PIXI.Container.)})
 
+(defmethod create-object :pixi.object.type/tiling-sprite [_]
+  {:val {}, :obj (js/PIXI.extras.TilingSprite.)})
+
 (defmethod create-object :pixi.object.type/graphics [_]
   {:val {}, :obj (js/PIXI.Graphics.)})
 
@@ -250,6 +253,12 @@
     {:val (dissoc value :pixi.render-texture/source)
      :obj (create-render-texture value)}
     {:val value, :obj (get-texture value)}))
+
+(defmethod update-prop! :pixi.tiling-sprite/tile-scale [sprite _ _ [x y]]
+  (set! (.-tileScale sprite) #js {:x x :y y}))
+
+(defmethod update-prop! :pixi.tiling-sprite/tile-position [sprite _ _ [x y]]
+  (set! (.-tilePosition sprite) #js {:x x :y y}))
 
 (defmethod create :pixi.graphics/shapes [graphics value]
   {:val value, :obj #js {}})

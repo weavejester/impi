@@ -255,10 +255,12 @@
     {:val value, :obj (get-texture value)}))
 
 (defmethod update-prop! :pixi.tiling-sprite/tile-scale [sprite _ _ [x y]]
-  (set! (.-tileScale sprite) #js {:x x :y y}))
+  (set! (-> sprite .-tileScale .-x) (or x 1))
+  (set! (-> sprite .-tileScale .-y)  (or y 1)))
 
 (defmethod update-prop! :pixi.tiling-sprite/tile-position [sprite _ _ [x y]]
-  (set! (.-tilePosition sprite) #js {:x x :y y}))
+  (set! (-> sprite .-tilePosition .-x) (or x 1))
+  (set! (-> sprite .-tilePosition .-y)  (or y 1)))
 
 (defmethod create :pixi.graphics/shapes [graphics value]
   {:val value, :obj #js {}})

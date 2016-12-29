@@ -231,10 +231,23 @@
 (defmulti create
   (fn [attr value] attr))
 
+(def ^:private renderer-arguments  
+  [:pixi.renderer/size
+   :pixi.renderer/antialias?
+   :pixi.renderer/transparent?
+   :pixi.renderer/no-webgl?
+   :pixi.renderer/resolution])
+
 (defmethod create :pixi/renderer
-  [_ {[w h] :pixi.renderer/size, transparent? :pixi.renderer/transparent? :as options}]
-  {:val (select-keys options [:pixi.renderer/size :pixi.renderer/transparent?])
-   :obj (js/PIXI.autoDetectRenderer w h #js {:transparent transparent?})})
+  [_ {[w h] :pixi.renderer/size
+      :keys [pixi.renderer/transparent? pixi.renderer/antialias?
+             pixi.renderer/no-webgl?    pixi.renderer/resolution]
+      :as options}]
+  {:val (select-keys options renderer-arguments)
+   :obj (js/PIXI.autoDetectRenderer w h #js {:transparent transparent?
+                                             :antialias   antialias?
+                                             :resolution  (or resolution 1)}
+                                            no-webgl?)})
 
 (defmethod create :pixi/stage [_ value]
   (create-object value))
@@ -402,7 +415,10 @@
   {:val new-value, :obj object})
 
 (def recreate-keys
-  #{:pixi.renderer/transparent?
+  #{:pixi.renderer/antialias?
+    :pixi.renderer/transparent?
+    :pixi.renderer/no-webgl?
+    :pixi.renderer/resolution
     :pixi.object/type
     :pixi.movie-clip/frames
     :pixi.texture/scale-mode

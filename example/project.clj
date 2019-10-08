@@ -19,6 +19,7 @@
                     :output-to "resources/public/js/main.js"
                     :output-dir "resources/public/js/out"
                     :optimizations :none}}}}
+  :jvm-opts ["--add-modules" "java.xml.bind"]
   :figwheel
   {:http-server-root "public"
    :server-port      3001
